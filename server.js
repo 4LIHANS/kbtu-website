@@ -12,7 +12,7 @@ app.use(express.static('.')); // Serve static files from current directory
 
 // Groq setup
 const groq = new Groq({
-    apiKey: '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'
+    apiKey: process.env.GROQ_API_KEY
 });
 
 // Endpoint for analysis
