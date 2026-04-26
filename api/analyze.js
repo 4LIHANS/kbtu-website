@@ -11,27 +11,43 @@ export default async function handler(req, res) {
     const data = req.body;
 
     const prompt = `
-Analyze the equipment characteristics and provide reliability analysis:
+You are an expert equipment reliability analyst. Analyze the following equipment characteristics and provide a detailed reliability assessment.
 
-Equipment Type: ${data.type}
-Manufacturer: ${data.manufacturer}
-Model: ${data.model}
-Year of Manufacture: ${data.year}
-Operating Pressure / Temperature: ${data.pressureTemp}
-Operating Hours: ${data.hours}
-Location of Operation: ${data.location}
-Last Repair Date: ${data.lastRepair}
-Environmental Conditions: ${data.environment}
+EQUIPMENT DETAILS:
+- Type: ${data.type}
+- Manufacturer: ${data.manufacturer}
+- Model: ${data.model}
+- Year: ${data.year}
+- Operating Conditions: ${data.pressureTemp}
+- Operating Hours: ${data.hours}
+- Location: ${data.location}
+- Last Repair: ${data.lastRepair}
+- Environment: ${data.environment}
 
-Provide analysis in JSON format with these keys:
-- failureProb: Failure probability (percentage)
-- commonCauses: Most common failure causes
-- avgLifetime: Average lifespan
-- similarStats: Statistics on similar equipment
-- maintenanceRec: Maintenance recommendations
-- nextFailure: When next failure is likely
+Based on industry standards and historical data for similar equipment, provide analysis in this EXACT JSON format:
 
-Respond ONLY with valid JSON, no additional text.
+{
+  "failureProb": 12.5,
+  "commonCauses": "Bearing wear, Seal leakage, Electrical faults, Corrosion",
+  "avgLifetime": 15000,
+  "similarStats": {
+    "failureRatePercentage": 15,
+    "meanTimeBetweenFailureHours": 12000,
+    "commonFailureModes": "Seal leakage, Bearing wear, Electrical fault"
+  },
+  "maintenanceRec": "Regular bearing inspection every 6 months, Seal replacement every 2 years, Annual electrical testing, Monthly vibration monitoring",
+  "nextFailure": "2026-07-15"
+}
+
+IMPORTANT:
+- failureProb: Number between 0-100 representing percentage
+- commonCauses: String with comma-separated failure causes
+- avgLifetime: Number representing hours
+- similarStats: Object with failureRatePercentage, meanTimeBetweenFailureHours, commonFailureModes
+- maintenanceRec: String with comma-separated recommendations
+- nextFailure: Date string in YYYY-MM-DD format
+
+Respond ONLY with valid JSON, no additional text or explanations.
 `;
 
     try {
