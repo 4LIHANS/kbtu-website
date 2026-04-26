@@ -2,7 +2,7 @@
   "name": "kbtu-website",
   "version": "1.0.0",
   "scripts": {
-    "start": "node api/index.js"
+    "start": "node server.js"
   },
   "dependencies": {
     "cors": "^2.8.6",
