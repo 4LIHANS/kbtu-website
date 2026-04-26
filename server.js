@@ -79,6 +79,11 @@ Respond ONLY with valid JSON, no additional text.
     }
 });
 
-app.listen(port, () => {
-    console.log(`Server running at http://localhost:${port}`);
-});
+// For Vercel serverless function
+if (require.main === module) {
+    app.listen(port, () => {
+        console.log(`Server running at http://localhost:${port}`);
+    });
+} else {
+    module.exports = app;
+}
