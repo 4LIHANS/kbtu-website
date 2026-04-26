@@ -1,6 +1,7 @@
 require('dotenv').config();
 
 const express = require('express');
+const path = require('path');
 const Groq = require('groq-sdk');
 const cors = require('cors');
 
@@ -10,7 +11,7 @@ const port = process.env.PORT || 3000;
 // Middleware
 app.use(cors());
 app.use(express.json());
-app.use(express.static('.')); // Serve static files from current directory
+app.use(express.static(path.join(__dirname, '..'))); // Serve static files from parent directory
 
 // Groq setup
 const groq = new Groq({
