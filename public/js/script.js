@@ -126,6 +126,11 @@ document.getElementById('equipment-form').addEventListener('submit', async funct
         }
         document.getElementById('next-failure').textContent = nextFailureText;
 
+        // Show validation warnings if any
+        if (result.warnings && result.warnings.length > 0) {
+            alert('Validation Warnings: ' + result.warnings.join(', '));
+        }
+
         // Reliability chart - make it dynamic based on failure probability
         const failureProb = parseFloat(result.failureProb) || 0;
         const ctx = document.getElementById('reliability-chart').getContext('2d');

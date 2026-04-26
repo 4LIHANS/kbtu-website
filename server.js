@@ -257,6 +257,27 @@ app.post('/api/analyze', async (req, res) => {
     const data = req.body;
     console.log('Received analysis request:', data);
 
+    // Validate input data
+    const validation = validateInputData(data);
+    console.log('Validation result:', validation);
+
+    // If data quality is poor, return limited analysis with warnings
+    if (!validation.isValid) {
+        return res.json({
+            failureProb: 50,
+            commonCauses: 'Unable to analyze - invalid input data',
+            avgLifetime: 5000,
+            similarStats: {
+                failureRatePercentage: 50,
+                meanTimeBetweenFailureHours: 4000,
+                commonFailureModes: 'Data validation required'
+            },
+            maintenanceRec: 'Please provide valid equipment information for accurate analysis',
+            nextFailure: '2026-12-31',
+            warnings: validation.issues
+        });
+    }
+
     const prompt = `
 You are an expert equipment reliability analyst. Analyze the following equipment characteristics and provide a detailed reliability assessment.
 
