@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Equipment Reliability Analyzer</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <header>
+        <nav>
+            <div class="nav-container">
+                <h1>Equipment Reliability Analyzer</h1>
+                <ul class="nav-menu">
+                    <li><a href="#general" class="nav-link">General</a></li>
+                    <li><a href="#analysis" class="nav-link active">Analysis</a></li>
+                    <li><a href="#documentation" class="nav-link">Documentation</a></li>
+                </ul>
+            </div>
+        </nav>
+    </header>
+
+    <main>
+        <section id="general" class="section">
+            <div class="container">
+                <div class="content-grid">
+                    <div class="content-card">
+                        <h3>Our Mission</h3>
+                        <p>We provide advanced AI-powered equipment reliability analysis to help industries maintain optimal performance and prevent costly downtime.</p>
+                    </div>
+                    <div class="content-card">
+                        <h3>Technology</h3>
+                        <p>Our tool uses cutting-edge AI models to analyze equipment characteristics and provide accurate reliability predictions based on historical data and expert knowledge.</p>
+                    </div>
+                    <div class="content-card">
+                        <h3>Benefits</h3>
+                        <ul>
+                            <li>Reduce maintenance costs</li>
+                            <li>Prevent unexpected failures</li>
+                            <li>Optimize equipment lifespan</li>
+                            <li>Data-driven decision making</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="documentation" class="section">
+            <div class="container">
+                <div class="doc-content">
+                    <div class="doc-section">
+                        <h3>Overview</h3>
+                        <p>This web application provides comprehensive equipment reliability analysis using AI technology. Users can input equipment specifications and receive detailed reliability assessments including failure probability, common causes, lifespan estimates, and maintenance recommendations.</p>
+                    </div>
+                    <div class="doc-section">
+                        <h3>Features</h3>
+                        <ul>
+                            <li><strong>AI-Powered Analysis:</strong> Utilizes advanced language models for accurate predictions</li>
+                            <li><strong>Comprehensive Input:</strong> Supports various equipment types with detailed specifications</li>
+                            <li><strong>Reliability Metrics:</strong> Provides failure probability, lifespan, and maintenance insights</li>
+                            <li><strong>Visual Charts:</strong> Interactive reliability charts for better understanding</li>
+                            <li><strong>Responsive Design:</strong> Works seamlessly on desktop and mobile devices</li>
+                        </ul>
+                    </div>
+                    <div class="doc-section">
+                        <h3>Technical Stack</h3>
+                        <ul>
+                            <li><strong>Frontend:</strong> HTML5, CSS3, JavaScript (ES6+)</li>
+                            <li><strong>Backend:</strong> Node.js with Express.js</li>
+                            <li><strong>AI Integration:</strong> Groq API for fast inference</li>
+                            <li><strong>Visualization:</strong> Chart.js for interactive charts</li>
+                            <li><strong>Styling:</strong> Modern CSS with animations and responsive design</li>
+                        </ul>
+                    </div>
+                    <div class="doc-section">
+                        <h3>How It Works</h3>
+                        <ol>
+                            <li>Enter equipment details in the analysis form</li>
+                            <li>AI analyzes the data using advanced algorithms</li>
+                            <li>Receive comprehensive reliability report</li>
+                            <li>Use insights for maintenance planning and decision making</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="analysis" class="section active">
+            <div class="container">
+                <div class="analysis-container">
+                    <div class="input-section">
+                        <form id="equipment-form">
+                            <div class="form-grid">
+                                <div class="form-group">
+                                    <label for="type">Equipment Type:</label>
+                                    <input type="text" id="type" placeholder="e.g., Pump, Compressor" required>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="manufacturer">Manufacturer:</label>
+                                    <input type="text" id="manufacturer" placeholder="e.g., Siemens" required>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="model">Model:</label>
+                                    <input type="text" id="model" placeholder="e.g., Model X-100" required>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="year">Year of Manufacture:</label>
+                                    <input type="number" id="year" placeholder="e.g., 2020" required>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="pressure-temp">Operating Pressure / Temperature:</label>
+                                    <input type="text" id="pressure-temp" placeholder="e.g., 50 bar / 80°C" required>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="hours">Operating Hours:</label>
+                                    <input type="number" id="hours" placeholder="e.g., 5000" required>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="location">Location of Operation:</label>
+                                    <input type="text" id="location" placeholder="e.g., Industrial Plant" required>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="last-repair">Last Repair Date:</label>
+                                    <input type="date" id="last-repair" required>
+                                </div>
+
+                                <div class="form-group full-width">
+                                    <label for="environment">Environmental Conditions:</label>
+                                    <textarea id="environment" placeholder="e.g., Corrosion, Humidity, Gas exposure" required></textarea>
+                                </div>
+                            </div>
+
+                            <button type="submit" class="analyze-btn">Analyze Reliability</button>
+                        </form>
+                    </div>
+
+                    <div class="results-section" id="results-section" style="display: none;">
+                        <h3>Analysis Results</h3>
+                        <div id="results" class="results-grid">
+                            <div class="result-card">
+                                <h4>Failure Probability</h4>
+                                <p id="failure-prob"></p>
+                            </div>
+                            <div class="result-card">
+                                <h4>Common Failure Causes</h4>
+                                <p id="common-causes"></p>
+                            </div>
+                            <div class="result-card">
+                                <h4>Average Lifespan</h4>
+                                <p id="avg-lifetime"></p>
+                            </div>
+                            <div class="result-card">
+                                <h4>Similar Equipment Stats</h4>
+                                <p id="similar-stats"></p>
+                            </div>
+                            <div class="result-card">
+                                <h4>Maintenance Recommendations</h4>
+                                <p id="maintenance-rec"></p>
+                            </div>
+                            <div class="result-card">
+                                <h4>Next Failure Likely</h4>
+                                <p id="next-failure"></p>
+                            </div>
+                        </div>
+                        <div class="chart-container">
+                            <h4>Reliability Chart</h4>
+                            <canvas id="reliability-chart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script src="js/script.js"></script>
+</body>
+</html>
