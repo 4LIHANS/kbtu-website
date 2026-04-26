@@ -1,24 +1,15 @@
 require('dotenv').config();
 
-const express = require('express');
 const Groq = require('groq-sdk');
-const cors = require('cors');
-
-const app = express();
-const port = process.env.PORT || 3000;
-
-// Middleware
-app.use(cors());
-app.use(express.json());
-app.use(express.static('.')); // Serve static files from current directory
-
-// Groq setup
 const groq = new Groq({
     apiKey: process.env.GROQ_API_KEY
 });
 
-// Endpoint for analysis
-app.post('/analyze', async (req, res) => {
+export default async function handler(req, res) {
+    if (req.method !== 'POST') {
+        return res.status(405).json({ error: 'Method not allowed' });
+    }
+
     const data = req.body;
 
     const prompt = `
@@ -63,27 +54,17 @@ Respond ONLY with valid JSON, no additional text.
         // Try to parse as JSON
         let analysis;
         try {
-            // Remove any markdown formatting if present
-            const cleanedText = response.replace(/```json\n?|\n?```/g, '').replace(/```\n?|\n?```/g, '').trim();
-            analysis = JSON.parse(cleanedText);
-        } catch (e) {
-            analysis = { error: 'Failed to parse AI response', raw: response };
+            analysis = JSON.parse(response);
+        } catch (parseError) {
+            console.error('Failed to parse Groq response as JSON:', response);
+            return res.status(500).json({ error: 'Invalid response format from AI' });
         }
 
         res.json(analysis);
     } catch (error) {
         console.error('Groq API Error:', error.message);
-        
+
         // Fallback disabled - return error instead
         res.status(500).json({ error: error.message });
     }
-});
-
-// For Vercel serverless function
-if (require.main === module) {
-    app.listen(port, () => {
-        console.log(`Server running at http://localhost:${port}`);
-    });
-} else {
-    module.exports = app;
 }
