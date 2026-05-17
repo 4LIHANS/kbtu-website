@@ -4,6 +4,20 @@ const groq = new Groq({
     apiKey: process.env.GROQ_API_KEY
 });
 
+function normalizeAnalysisInput(data) {
+    return {
+        type: (data.type || data.eqType || 'ESP pump').trim(),
+        manufacturer: (data.manufacturer || 'ESP equipment').trim(),
+        model: (data.model || 'Field X ESP').trim(),
+        year: Number(data.year || data.aiYear || 2024) || 2024,
+        pressureTemp: (data.pressureTemp || data.aiPress || '35 atm').trim(),
+        hours: Number(data.hours || data.aiHrs || 4380) || 4380,
+        location: (data.location || 'Field X, Almaty').trim(),
+        lastRepair: data.lastRepair || data.aiLastRepair || new Date(Date.now() - 1000 * 60 * 60 * 24 * 90).toISOString().split('T')[0],
+        environment: (data.environment || data.aiNotes || data.notes || 'Standard ESP operating conditions.').trim()
+    };
+}
+
 // Validate input data quality
 function validateInputData(data) {
     const issues = [];
@@ -78,7 +92,7 @@ export default async function handler(req, res) {
         return res.status(405).json({ error: 'Method not allowed' });
     }
 
-    const data = req.body;
+    const data = normalizeAnalysisInput(req.body);
 
     // Validate input data
     const validation = validateInputData(data);

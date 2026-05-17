@@ -1,185 +1,563 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Equipment Reliability Analyzer</title>
-    <link rel="stylesheet" href="css/styles.css">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ESP Digital Twin · KBTU Field X</title>
+<link href="https://fonts.googleapis.com/css2?family=Exo+2:wght@300;400;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="js/OBJLoader2.js"></script>
+<style>
+:root{--bg:#06080f;--sf:#0c1222;--sf2:#111b30;--bd:rgba(0,200,255,.10);--ac:#00c8ff;--am:#ff8c00;--dn:#ff3535;--ok:#00e676;--wn:#ffc107;--tx:#dde6f0;--mt:#4a5f7a;--hd:'Exo 2',sans-serif;--mn:'JetBrains Mono',monospace}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--tx);font-family:var(--hd);min-height:100vh;overflow-x:hidden}
+body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(0,200,255,.025) 1px,transparent 1px),linear-gradient(90deg,rgba(0,200,255,.025) 1px,transparent 1px);background-size:44px 44px;pointer-events:none;z-index:0}
+header{position:sticky;top:0;z-index:200;background:rgba(6,8,15,.96);backdrop-filter:blur(18px);border-bottom:1px solid var(--bd);padding:0 2rem;display:flex;align-items:center;justify-content:space-between;height:58px;gap:1rem}
+.logo{display:flex;align-items:center;gap:10px;flex-shrink:0}
+.logo-badge{background:linear-gradient(135deg,#00c8ff,#0055ff);width:30px;height:30px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:11px;color:#fff}
+.logo-text{font-weight:700;font-size:14px;letter-spacing:.04em;white-space:nowrap}
+.logo-text em{color:var(--ac);font-style:normal}
+nav{display:flex;gap:2px}
+.tb{background:none;border:none;color:var(--mt);font-family:var(--hd);font-size:12px;font-weight:700;letter-spacing:.06em;padding:6px 12px;cursor:pointer;border-radius:6px;transition:all .2s;text-transform:uppercase;white-space:nowrap}
+.tb:hover{color:var(--tx);background:var(--sf2)}
+.tb.active{color:var(--ac);background:rgba(0,200,255,.1)}
+.live{display:flex;align-items:center;gap:7px;font-size:11px;color:var(--ok);font-family:var(--mn);white-space:nowrap;flex-shrink:0}
+.live::before{content:'';width:7px;height:7px;border-radius:50%;background:var(--ok);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(0,230,118,.5)}60%{box-shadow:0 0 0 6px rgba(0,230,118,0)}}
+main{position:relative;z-index:1;max-width:1360px;margin:0 auto;padding:2rem}
+.tp{display:none}.tp.active{display:block;animation:fi .3s ease}
+@keyframes fi{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.sh{margin-bottom:1.75rem}
+.st{font-size:26px;font-weight:800;letter-spacing:-.02em;line-height:1.2;margin-bottom:3px}
+.st em{color:var(--ac);font-style:normal}
+.ss{color:var(--mt);font-size:12px;font-family:var(--mn)}
+.kr{display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;margin-bottom:1.75rem}
+.kc{background:var(--sf);border:1px solid var(--bd);border-radius:12px;padding:1.25rem 1.5rem;position:relative;overflow:hidden}
+.kc::before{content:'';position:absolute;top:0;left:0;right:0;height:2px}
+.kc.c1::before{background:var(--ac)}.kc.c2::before{background:var(--am)}.kc.c3::before{background:var(--dn)}.kc.c4::before{background:var(--ok)}
+.kl{font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--mt);margin-bottom:7px;font-family:var(--mn)}
+.kv{font-size:30px;font-weight:800;line-height:1;font-family:var(--mn)}
+.kc.c1 .kv{color:var(--ac)}.kc.c2 .kv{color:var(--am)}.kc.c3 .kv{color:var(--dn)}.kc.c4 .kv{color:var(--ok)}
+.kd{font-size:11px;color:var(--mt);margin-top:5px}
+.cg2{display:grid;grid-template-columns:1fr 1fr;gap:1.25rem;margin-bottom:1.25rem}
+.cg21{display:grid;grid-template-columns:2fr 1fr;gap:1.25rem}
+.cc{background:var(--sf);border:1px solid var(--bd);border-radius:12px;padding:1.4rem}
+.ct{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.09em;color:var(--mt);margin-bottom:1rem;font-family:var(--mn)}
+.ct em{color:var(--ac);font-style:normal}
+.tg{display:grid;grid-template-columns:1fr 1fr;gap:1.5rem}
+.pn{background:var(--sf);border:1px solid var(--bd);border-radius:12px;padding:1.5rem}
+.ig{margin-bottom:1.5rem}
+.ir{display:flex;justify-content:space-between;align-items:center;margin-bottom:9px;font-size:13px;font-weight:600}
+.iv{font-family:var(--mn);color:var(--ac);font-size:17px;font-weight:700}
+input[type=range]{width:100%;height:5px;appearance:none;-webkit-appearance:none;background:var(--sf2);border-radius:3px;outline:none;cursor:pointer}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;border-radius:50%;background:var(--ac);cursor:pointer;box-shadow:0 0 8px rgba(0,200,255,.4)}
+.rl{display:flex;justify-content:space-between;font-size:10px;color:var(--mt);font-family:var(--mn);margin-top:4px}
+.hr{display:flex;gap:7px;margin-top:8px}
+.hb{background:var(--sf2);border:1px solid var(--bd);border-radius:5px;padding:3px 9px;font-size:10px;font-family:var(--mn);color:var(--mt);transition:all .3s}
+.hb.rz{border-color:var(--dn);color:var(--dn)}
+.gp{display:flex;flex-direction:column;align-items:center;gap:.5rem}
+.gw{position:relative;width:200px;height:200px;margin:.75rem auto}
+#gC{width:200px;height:200px}
+.gc{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;pointer-events:none}
+.gpct{font-size:40px;font-weight:800;font-family:var(--mn);line-height:1;transition:color .4s}
+.glbl{font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--mt);margin-top:2px}
+.rb{font-size:18px;font-weight:800;letter-spacing:.12em;padding:7px 22px;border-radius:8px;transition:all .4s;font-family:var(--mn)}
+.rb.lo{background:rgba(0,230,118,.12);color:var(--ok);border:1px solid var(--ok)}
+.rb.mo{background:rgba(255,193,7,.12);color:var(--wn);border:1px solid var(--wn)}
+.rb.hi{background:rgba(255,140,0,.12);color:var(--am);border:1px solid var(--am)}
+.rb.cr{background:rgba(255,53,53,.12);color:var(--dn);border:1px solid var(--dn);animation:blink 1s infinite}
+@keyframes blink{50%{opacity:.65}}
+.fl{width:100%;margin-top:1.25rem}
+.fi2{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--bd);font-size:12px}
+.fi2:last-child{border-bottom:none}
+.fn{color:var(--mt)}.fv{font-family:var(--mn);font-weight:700}.fo{color:var(--dn)}.ff{color:var(--mt)}
+.model-nav{display:flex;gap:8px;margin-bottom:1.5rem}
+.mn-btn{background:var(--sf);border:1px solid var(--bd);color:var(--mt);font-family:var(--hd);font-size:12px;font-weight:700;letter-spacing:.06em;padding:8px 18px;cursor:pointer;border-radius:8px;transition:all .2s;text-transform:uppercase}
+.mn-btn:hover{border-color:var(--ac);color:var(--tx)}
+.mn-btn.active{background:rgba(0,200,255,.1);border-color:var(--ac);color:var(--ac)}
+.model-wrap{display:grid;grid-template-columns:1fr 300px;gap:1.5rem;align-items:start}
+.canvas-card{background:var(--sf);border:1px solid var(--bd);border-radius:12px;overflow:hidden;position:relative}
+.canvas-card canvas{display:block;width:100%;height:520px}
+.drag-hint{position:absolute;bottom:12px;left:50%;transform:translateX(-50%);font-size:10px;color:rgba(0,200,255,.5);font-family:var(--mn);pointer-events:none;background:rgba(6,8,15,.7);padding:4px 12px;border-radius:20px}
+.info-card{background:var(--sf);border:1px solid var(--bd);border-radius:12px;padding:1.5rem}
+.info-name{font-size:16px;font-weight:800;margin-bottom:.5rem;color:var(--ac)}
+.info-sub{font-size:11px;color:var(--mt);font-family:var(--mn);margin-bottom:1rem}
+.spec-row{display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--bd);font-size:12px}
+.spec-row:last-child{border-bottom:none}
+.spec-l{color:var(--mt)}.spec-v{font-family:var(--mn);font-weight:700;color:var(--tx)}
+.ds-ctrl{display:flex;gap:10px;align-items:center;margin-bottom:1.25rem;flex-wrap:wrap}
+.ds-in{background:var(--sf2);border:1px solid var(--bd);border-radius:7px;color:var(--tx);font-family:var(--mn);font-size:12px;padding:7px 11px;outline:none;width:180px}
+.ds-in:focus{border-color:var(--ac)}
+.ds-sel{background:var(--sf2);border:1px solid var(--bd);border-radius:7px;color:var(--tx);font-family:var(--mn);font-size:12px;padding:7px 11px;outline:none;cursor:pointer}
+.btn-dl{background:rgba(0,200,255,.1);border:1px solid rgba(0,200,255,.3);color:var(--ac);font-family:var(--hd);font-size:12px;font-weight:700;letter-spacing:.05em;padding:7px 16px;border-radius:7px;cursor:pointer;transition:all .2s;text-transform:uppercase;margin-left:auto}
+.btn-dl:hover{background:rgba(0,200,255,.2)}
+.tbl-wrap{overflow-x:auto;border-radius:10px;border:1px solid var(--bd)}
+table{width:100%;border-collapse:collapse;font-size:11.5px;font-family:var(--mn);white-space:nowrap}
+thead th{background:var(--sf2);color:var(--mt);font-weight:700;text-transform:uppercase;letter-spacing:.06em;padding:10px 12px;text-align:left;border-bottom:1px solid var(--bd);font-size:10px;cursor:pointer;user-select:none}
+thead th:hover{color:var(--tx)}
+tbody tr{border-bottom:1px solid rgba(0,200,255,.05)}
+tbody tr:hover{background:rgba(0,200,255,.04)}
+tbody td{padding:8px 12px}
+.tf{background:rgba(255,53,53,.15);color:var(--dn);border-radius:4px;padding:2px 6px;font-size:10px}
+.to{background:rgba(0,230,118,.1);color:var(--ok);border-radius:4px;padding:2px 6px;font-size:10px}
+.tw{background:rgba(255,193,7,.1);color:var(--wn);border-radius:4px;padding:2px 6px;font-size:10px}
+.pg{display:flex;gap:6px;margin-top:1rem;align-items:center;justify-content:flex-end;font-size:12px;font-family:var(--mn)}
+.pg-b{background:var(--sf);border:1px solid var(--bd);color:var(--mt);padding:5px 10px;border-radius:6px;cursor:pointer;transition:all .2s;font-family:var(--mn);font-size:12px}
+.pg-b:hover{color:var(--ac);border-color:var(--ac)}
+.pg-b.cur2{color:var(--ac);background:rgba(0,200,255,.1);border-color:var(--ac)}
+.ai-grid{display:grid;grid-template-columns:1fr 1.6fr;gap:1.5rem}
+.form-lbl{display:block;font-size:10px;text-transform:uppercase;letter-spacing:.09em;color:var(--mt);margin-bottom:5px;font-family:var(--mn)}
+.fg{margin-bottom:.9rem}
+.fi-i,.fi-s,.fi-t{width:100%;background:var(--sf2);border:1px solid var(--bd);border-radius:7px;color:var(--tx);font-family:var(--hd);font-size:13px;padding:9px 11px;outline:none;transition:border-color .2s}
+.fi-i:focus,.fi-s:focus,.fi-t:focus{border-color:var(--ac)}
+.fi-s option{background:var(--sf2)}.fi-t{resize:vertical;min-height:70px}
+.api-n{background:rgba(0,200,255,.05);border:1px solid rgba(0,200,255,.18);border-radius:7px;padding:9px 11px;font-size:10px;color:var(--mt);margin-bottom:.85rem;font-family:var(--mn);line-height:1.7}
+.btn-run{width:100%;background:linear-gradient(135deg,#00c8ff,#0055ff);border:none;color:#fff;font-family:var(--hd);font-weight:700;font-size:13px;letter-spacing:.06em;padding:11px;border-radius:7px;cursor:pointer;transition:all .2s;text-transform:uppercase}
+.btn-run:hover{opacity:.88;transform:translateY(-1px)}.btn-run:disabled{opacity:.45;cursor:not-allowed;transform:none}
+.rp{background:var(--sf);border:1px solid var(--bd);border-radius:12px;padding:1.5rem;min-height:480px;display:flex;flex-direction:column}
+.rh{display:flex;align-items:center;gap:10px;padding-bottom:1rem;border-bottom:1px solid var(--bd);margin-bottom:1rem}
+.ai-ic{width:30px;height:30px;background:linear-gradient(135deg,var(--ac),#0055ff);border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
+.rb2{flex:1;font-size:12.5px;line-height:1.85;font-family:var(--mn);white-space:pre-wrap;overflow-y:auto}
+.re{color:var(--mt);text-align:center;margin:auto;font-family:var(--hd);font-size:14px}
+.re span{font-size:36px;display:block;margin-bottom:12px;opacity:.4}
+@keyframes cb{50%{opacity:0}}.cur{animation:cb 1s infinite}
+.lg{display:grid;gap:.9rem}
+.lc{background:var(--sf);border:1px solid var(--bd);border-radius:12px;padding:1.4rem;display:grid;grid-template-columns:72px 1fr;gap:1.25rem;transition:border-color .2s}
+.lc:hover{border-color:rgba(0,200,255,.28)}
+.lyr{font-size:26px;font-weight:800;font-family:var(--mn);color:var(--ac);line-height:1}
+.ltg{font-size:9px;background:rgba(0,200,255,.1);color:var(--ac);border:1px solid rgba(0,200,255,.25);border-radius:4px;padding:2px 6px;margin-top:5px;display:inline-block;font-family:var(--mn)}
+.lven{font-size:10px;color:var(--ac);font-family:var(--mn);margin-bottom:7px}
+.ltt{font-size:14px;font-weight:700;margin-bottom:5px;line-height:1.35}
+.lau{font-size:11px;color:var(--mt);margin-bottom:7px;font-style:italic}
+.ld{font-size:12px;color:#7a94b0;line-height:1.65;margin-bottom:9px}
+.ll{font-size:10px;color:var(--ac);font-family:var(--mn);text-decoration:none;word-break:break-all}
+.ll:hover{text-decoration:underline}
+@media(max-width:960px){.kr{grid-template-columns:1fr 1fr}.cg2,.cg21,.tg,.ai-grid,.model-wrap{grid-template-columns:1fr}.canvas-card canvas{height:380px}.lc{grid-template-columns:55px 1fr}}
+@media(max-width:560px){main{padding:1rem}header{padding:0 1rem}.st{font-size:20px}}
+</style>
 </head>
 <body>
-    <header>
-        <nav>
-            <div class="nav-container">
-                <h1>Equipment Reliability Analyzer</h1>
-                <ul class="nav-menu">
-                    <li><a href="#general" class="nav-link">General</a></li>
-                    <li><a href="#analysis" class="nav-link active">Analysis</a></li>
-                    <li><a href="#documentation" class="nav-link">Documentation</a></li>
-                </ul>
-            </div>
-        </nav>
-    </header>
+<header>
+  <div class="logo"><div class="logo-badge">KX</div><div class="logo-text">ESP <em>Digital Twin</em> · Field X</div></div>
+  <nav>
+    <button class="tb active" onclick="sw('dash',this)">Dashboard</button>
+    <button class="tb" onclick="sw('twin',this)">ESP Twin</button>
+    <button class="tb" onclick="sw('3d',this)">3D Models</button>
+    <button class="tb" onclick="sw('data',this)">Dataset</button>
+    <button class="tb" onclick="sw('ai',this)">AI Analysis</button>
+    <button class="tb" onclick="sw('lit',this)">References</button>
+  </nav>
+  <div class="live">LIVE · 2026</div>
+</header>
+<main>
 
-    <main>
-        <section id="general" class="section">
-            <div class="container">
-                <div class="content-grid">
-                    <div class="content-card">
-                        <h3>Our Mission</h3>
-                        <p>We provide advanced AI-powered equipment reliability analysis to help industries maintain optimal performance and prevent costly downtime.</p>
-                    </div>
-                    <div class="content-card">
-                        <h3>Technology</h3>
-                        <p>Our tool uses cutting-edge AI models to analyze equipment characteristics and provide accurate reliability predictions based on historical data and expert knowledge.</p>
-                    </div>
-                    <div class="content-card">
-                        <h3>Benefits</h3>
-                        <ul>
-                            <li>Reduce maintenance costs</li>
-                            <li>Prevent unexpected failures</li>
-                            <li>Optimize equipment lifespan</li>
-                            <li>Data-driven decision making</li>
-                        </ul>
-                    </div>
-                </div>
-            </div>
-        </section>
+<!-- DASHBOARD -->
+<div class="tp active" id="panel-dash">
+  <div class="sh"><div class="st">Field X <em>Overview</em></div><div class="ss">Synthetic dataset · 42 assets · Full year 2026 · KBTU School of Energy &amp; Petroleum Industry</div></div>
+  <div class="kr">
+    <div class="kc c1"><div class="kl">Total Assets</div><div class="kv">42</div><div class="kd">5 well clusters + CPS</div></div>
+    <div class="kc c2"><div class="kl">Sensor Readings</div><div class="kv">367,920</div><div class="kd">Hourly · Full year</div></div>
+    <div class="kc c3"><div class="kl">Failure Events</div><div class="kv">119</div><div class="kd">8 equipment types</div></div>
+    <div class="kc c4"><div class="kl">ML Features</div><div class="kv">71</div><div class="kd">Per time step</div></div>
+  </div>
+  <div class="cg2">
+    <div class="cc"><div class="ct">Monthly Failure <em>Events</em> — Field X 2026</div><div style="position:relative;height:230px"><canvas id="cFail" role="img" aria-label="Monthly failures">Monthly failures.</canvas></div></div>
+    <div class="cc"><div class="ct">ESP Failure <em>Distribution</em></div><div style="position:relative;height:230px"><canvas id="cDonut" role="img" aria-label="ESP failure types">Failure types.</canvas></div></div>
+  </div>
+  <div class="cg21">
+    <div class="cc"><div class="ct">Daily Oil <em>Production</em> — m³/day avg per well</div><div style="position:relative;height:195px"><canvas id="cProd" role="img" aria-label="Daily production">Production trend.</canvas></div></div>
+    <div class="cc"><div class="ct">Quarterly <em>P&amp;L Overview</em></div><div style="position:relative;height:195px"><canvas id="cPL" role="img" aria-label="P&L">P&L.</canvas></div></div>
+  </div>
+</div>
 
-        <section id="documentation" class="section">
-            <div class="container">
-                <div class="doc-content">
-                    <div class="doc-section">
-                        <h3>Overview</h3>
-                        <p>This web application provides comprehensive equipment reliability analysis using AI technology. Users can input equipment specifications and receive detailed reliability assessments including failure probability, common causes, lifespan estimates, and maintenance recommendations.</p>
-                    </div>
-                    <div class="doc-section">
-                        <h3>Features</h3>
-                        <ul>
-                            <li><strong>AI-Powered Analysis:</strong> Utilizes advanced language models for accurate predictions</li>
-                            <li><strong>Comprehensive Input:</strong> Supports various equipment types with detailed specifications</li>
-                            <li><strong>Reliability Metrics:</strong> Provides failure probability, lifespan, and maintenance insights</li>
-                            <li><strong>Visual Charts:</strong> Interactive reliability charts for better understanding</li>
-                            <li><strong>Responsive Design:</strong> Works seamlessly on desktop and mobile devices</li>
-                        </ul>
-                    </div>
-                    <div class="doc-section">
-                        <h3>Technical Stack</h3>
-                        <ul>
-                            <li><strong>Frontend:</strong> HTML5, CSS3, JavaScript (ES6+)</li>
-                            <li><strong>Backend:</strong> Node.js with Express.js</li>
-                            <li><strong>AI Integration:</strong> Groq API for fast inference</li>
-                            <li><strong>Visualization:</strong> Chart.js for interactive charts</li>
-                            <li><strong>Styling:</strong> Modern CSS with animations and responsive design</li>
-                        </ul>
-                    </div>
-                    <div class="doc-section">
-                        <h3>How It Works</h3>
-                        <ol>
-                            <li>Enter equipment details in the analysis form</li>
-                            <li>AI analyzes the data using advanced algorithms</li>
-                            <li>Receive comprehensive reliability report</li>
-                            <li>Use insights for maintenance planning and decision making</li>
-                        </ol>
-                    </div>
-                </div>
-            </div>
-        </section>
+<!-- ESP TWIN -->
+<div class="tp" id="panel-twin">
+  <div class="sh"><div class="st">ESP <em>Digital Twin</em> — Real-Time Risk Calculator</div><div class="ss">Failure probability formula · Bhardwaj et al. 2019 (OnePetro) · Field X ESP parameters</div></div>
+  <div class="tg">
+    <div class="pn">
+      <div class="ig"><div class="ir"><span>Motor Temperature</span><span class="iv" id="vT">100 °C</span></div><input type="range" id="sT" min="80" max="130" value="100" oninput="calc()"><div class="rl"><span>80°C normal</span><span>130°C critical</span></div><div class="hr"><span class="hb" id="h0">T-3: 97°C</span><span class="hb" id="h1">T-2: 98°C</span><span class="hb" id="h2">T-1: 99°C</span></div></div>
+      <div class="ig"><div class="ir"><span>Vibration Level</span><span class="iv" id="vV">6.5 mm/s</span></div><input type="range" id="sV" min="1" max="15" step="0.1" value="6.5" oninput="calc()"><div class="rl"><span>1 mm/s low</span><span>15 mm/s critical</span></div></div>
+      <div class="ig"><div class="ir"><span>Intake Pressure</span><span class="iv" id="vP">40 atm</span></div><input type="range" id="sP" min="10" max="60" value="40" oninput="calc()"><div class="rl"><span>10 atm low</span><span>60 atm high</span></div></div>
+      <div class="fl">
+        <div class="fi2"><span class="fn">Base probability</span><span class="fv fo">+5%</span></div>
+        <div class="fi2"><span class="fn">Temp trend (3-cycle ≥5%)</span><span class="fv ff" id="fTr">+0%</span></div>
+        <div class="fi2"><span class="fn">Overheating penalty</span><span class="fv ff" id="fHe">+0%</span></div>
+        <div class="fi2"><span class="fn">Vibration (C/D zone)</span><span class="fv ff" id="fVi">+0%</span></div>
+        <div class="fi2"><span class="fn">Low intake pressure</span><span class="fv ff" id="fPr">+0%</span></div>
+      </div>
+    </div>
+    <div class="pn gp">
+      <div style="font-size:11px;text-transform:uppercase;letter-spacing:.09em;color:var(--mt);font-family:var(--mn)">Failure Probability</div>
+      <div class="gw"><canvas id="gC" width="200" height="200"></canvas><div class="gc"><div class="gpct" id="gPct">5%</div><div class="glbl">PROBABILITY</div></div></div>
+      <div class="rb lo" id="rBadge">✓ LOW RISK</div>
+      <div style="width:100%;font-size:11px;color:var(--mt);font-family:var(--mn);line-height:2;margin-top:.75rem">
+        <div>● &lt;25% → <span style="color:var(--ok)">LOW</span></div><div>● 25–50% → <span style="color:var(--wn)">MODERATE</span></div><div>● 50–75% → <span style="color:var(--am)">HIGH</span></div><div>● &gt;75% → <span style="color:var(--dn)">CRITICAL</span></div>
+      </div>
+      <div style="margin-top:1rem;font-size:10px;color:var(--mt);font-family:var(--mn);line-height:1.8;width:100%;background:var(--sf2);border-radius:8px;padding:.75rem 1rem">
+        P = 0.05 + [0.20 trend] + [0.10–0.40 heat]<br>+ [0.15/0.25 vib] + [0.20 low P] → [0, 0.99]
+      </div>
+    </div>
+  </div>
+</div>
 
-        <section id="analysis" class="section active">
-            <div class="container">
-                <div class="analysis-container">
-                    <div class="input-section">
-                        <form id="equipment-form">
-                            <div class="form-grid">
-                                <div class="form-group">
-                                    <label for="type">Equipment Type:</label>
-                                    <input type="text" id="type" placeholder="e.g., Pump, Compressor" required>
-                                </div>
+<!-- 3D MODELS -->
+<div class="tp" id="panel-3d">
+  <div class="sh"><div class="st">ESP <em>3D Models</em></div><div class="ss">Interactive viewer · Drag to rotate · Scroll to zoom · Three.js r128</div></div>
+  <div class="model-nav">
+    <button class="mn-btn active" onclick="loadModel('esp',this)">ESP Assembly</button>
+    <button class="mn-btn" onclick="loadModel('impeller',this)">Impeller</button>
+    <button class="mn-btn" onclick="loadModel('shaft',this)">Pump Shaft</button>
+  </div>
+  <div class="model-wrap">
+    <div class="canvas-card"><canvas id="threeCanvas"></canvas><div class="drag-hint">Drag to rotate · Scroll to zoom</div></div>
+    <div class="info-card" id="modelInfo"></div>
+  </div>
+</div>
 
-                                <div class="form-group">
-                                    <label for="manufacturer">Manufacturer:</label>
-                                    <input type="text" id="manufacturer" placeholder="e.g., Siemens" required>
-                                </div>
+<!-- DATASET -->
+<div class="tp" id="panel-data">
+  <div class="sh"><div class="st">Virtual Field X <em>Dataset</em></div><div class="ss">Synthetic sensor data · 500 rows preview · 71 features · 119 failure events · Full year 2026</div></div>
+  <div class="kr">
+    <div class="kc c1"><div class="kl">Loaded Rows</div><div class="kv" id="ds-tot">–</div><div class="kd">Filtered</div></div>
+    <div class="kc c3"><div class="kl">Failures (7d=1)</div><div class="kv" id="ds-fl">–</div><div class="kd">Positive labels</div></div>
+    <div class="kc c2"><div class="kl">Avg Temp Motor</div><div class="kv" id="ds-tp">–</div><div class="kd">°C</div></div>
+    <div class="kc c4"><div class="kl">Avg Vibration</div><div class="kv" id="ds-vb">–</div><div class="kd">mm/s</div></div>
+  </div>
+  <div class="ds-ctrl">
+    <input type="text" class="ds-in" id="ds-search" placeholder="Search asset ID..." oninput="renderTbl()">
+    <select class="ds-sel" id="ds-type" onchange="renderTbl()"><option value="">All types</option><option value="ESP">ESP</option><option value="SEP">Separator</option><option value="AGZU">AGZU</option><option value="COMP">Compressor</option><option value="GTU">GTU</option></select>
+    <select class="ds-sel" id="ds-fail" onchange="renderTbl()"><option value="">All labels</option><option value="1">Failure (7d=1)</option><option value="0">Normal (7d=0)</option></select>
+    <button class="btn-dl" onclick="dlCSV()">⬇ Download CSV (500 rows)</button>
+  </div>
+  <div class="tbl-wrap"><table><thead><tr>
+    <th onclick="srtBy('timestamp')">Timestamp</th><th onclick="srtBy('asset_id')">Asset ID</th><th onclick="srtBy('asset_type')">Type</th><th onclick="srtBy('cluster')">Cluster</th>
+    <th onclick="srtBy('temp_motor')">Temp (°C)</th><th onclick="srtBy('vibration')">Vib (mm/s)</th><th onclick="srtBy('pressure_intake')">P.In (atm)</th><th onclick="srtBy('flow_rate')">Flow (m³/d)</th>
+    <th onclick="srtBy('rul_hours')">RUL (h)</th><th onclick="srtBy('fail_label_7d')">Fail 7d</th><th onclick="srtBy('failure_mode')">Mode</th><th onclick="srtBy('total_loss_usd')">Loss ($)</th>
+  </tr></thead><tbody id="dsBody"></tbody></table></div>
+  <div class="pg" id="pgCtrl"></div>
+</div>
 
-                                <div class="form-group">
-                                    <label for="model">Model:</label>
-                                    <input type="text" id="model" placeholder="e.g., Model X-100" required>
-                                </div>
+<!-- AI ANALYSIS -->
+<div class="tp" id="panel-ai">
+  <div class="sh"><div class="st">AI-Powered <em>ESP Analysis</em></div><div class="ss">Powered by Groq · ESP-specialized failure assessment · Field X context</div></div>
+  <div class="ai-grid">
+    <div class="pn">
+      <div class="fg"><label class="form-lbl">Equipment Type</label><select class="fi-s" id="eqType"><option>ESP pump (centrifugal, multi-stage)</option><option>Electric motor (ESP downhole)</option><option>Seal / protector unit</option><option>Gas separator (AGZU)</option><option>Reciprocating compressor (CPS)</option><option>Water injection pump</option></select></div>
+      <div class="fg"><label class="form-lbl">Operating Hours</label><input type="number" class="fi-i" id="aiHrs" value="4380"></div>
+      <div class="fg"><label class="form-lbl">Motor Temperature (°C)</label><input type="number" class="fi-i" id="aiTemp" value="108"></div>
+      <div class="fg"><label class="form-lbl">Vibration (mm/s)</label><input type="number" class="fi-i" id="aiVib" value="8.3" step="0.1"></div>
+      <div class="fg"><label class="form-lbl">Intake Pressure (atm)</label><input type="number" class="fi-i" id="aiPress" value="35"></div>
+      <div class="fg"><label class="form-lbl">Additional Notes</label><textarea class="fi-t" id="aiNotes" placeholder="e.g. sand production, cable replacement 6 months ago, winter conditions..."></textarea></div>
+      <button class="btn-run" id="runBtn" onclick="runAI()">⚡ Analyze</button>
+    </div>
+    <div class="rp">
+      <div class="rh"><div class="ai-ic">🤖</div><div><div style="font-weight:700;font-size:13px">Groq ESP Analysis</div><div style="font-size:10px;color:var(--mt);font-family:var(--mn)">openai/gpt-oss-20b · server-side</div></div></div>
+      <div class="rb2" id="respBody"><div class="re"><span>🔍</span>Fill in parameters and click<br><strong>Analyze</strong></div></div>
+    </div>
+  </div>
+</div>
 
-                                <div class="form-group">
-                                    <label for="year">Year of Manufacture:</label>
-                                    <input type="number" id="year" placeholder="e.g., 2020" required>
-                                </div>
+<!-- LITERATURE -->
+<div class="tp" id="panel-lit">
+  <div class="sh"><div class="st">OnePetro <em>Literature Review</em></div><div class="ss">6 peer-reviewed sources · SPE / OTC / ADIPEC / GOTECH · 2019–2025</div></div>
+  <div class="lg" id="litGrid"></div>
+</div>
 
-                                <div class="form-group">
-                                    <label for="pressure-temp">Operating Pressure / Temperature:</label>
-                                    <input type="text" id="pressure-temp" placeholder="e.g., 50 bar / 80°C" required>
-                                </div>
+</main>
+<script>
+// ── TABS
+let threeReady=false, dsReady=false, autoRotate=true;
+function sw(id,btn){
+  document.querySelectorAll('.tp').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tb').forEach(b=>b.classList.remove('active'));
+  document.getElementById('panel-'+id).classList.add('active');
+  btn.classList.add('active');
+  if(id==='3d'&&!threeReady){initThree();threeReady=true;}
+  if(id==='data'&&!dsReady){initDS();dsReady=true;}
+}
 
-                                <div class="form-group">
-                                    <label for="hours">Operating Hours:</label>
-                                    <input type="number" id="hours" placeholder="e.g., 5000" required>
-                                </div>
+// ── CHARTS
+Chart.defaults.color='#3d5570';Chart.defaults.borderColor='rgba(0,200,255,0.07)';
+Chart.defaults.font.family="'JetBrains Mono',monospace";Chart.defaults.font.size=11;
+const MO=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const MF=[13,12,10,8,8,9,10,9,9,10,10,11];
+new Chart('cFail',{type:'bar',data:{labels:MO,datasets:[{data:MF,backgroundColor:MF.map(v=>v>=12?'rgba(255,53,53,.65)':v>=10?'rgba(255,140,0,.65)':'rgba(0,200,255,.45)'),borderColor:MF.map(v=>v>=12?'#ff3535':v>=10?'#ff8c00':'#00c8ff'),borderWidth:1,borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{grid:{color:'rgba(0,200,255,.05)'},ticks:{stepSize:2}},x:{grid:{display:false}}}}});
+new Chart('cDonut',{type:'doughnut',data:{labels:['ESP Pump','Motor','Seal/Protector','Cable System','Other'],datasets:[{data:[45,20,15,10,10],backgroundColor:['#00c8ff','#ff8c00','#ff3535','#ffc107','#4a5f7a'],borderColor:'#0c1222',borderWidth:3,hoverOffset:6}]},options:{responsive:true,maintainAspectRatio:false,cutout:'63%',plugins:{legend:{position:'bottom',labels:{padding:10,font:{size:10},usePointStyle:true,color:'#4a5f7a'}}}}});
+new Chart('cProd',{type:'line',data:{labels:MO,datasets:[{data:[128,125,130,133,131,129,127,130,128,126,122,120],borderColor:'#00c8ff',backgroundColor:'rgba(0,200,255,.06)',borderWidth:2,pointRadius:4,pointBackgroundColor:'#00c8ff',fill:true,tension:0.4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{grid:{color:'rgba(0,200,255,.05)'},min:110,max:145},x:{grid:{display:false}}}}});
+new Chart('cPL',{type:'bar',data:{labels:['Q1','Q2','Q3','Q4'],datasets:[{label:'Revenue (bln KZT)',data:[13.2,14.1,14.8,13.9],backgroundColor:'rgba(0,200,255,.55)',borderRadius:4},{label:'Losses (mln KZT)',data:[42,38,41,41],backgroundColor:'rgba(255,53,53,.45)',borderRadius:4,yAxisID:'y2'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{font:{size:10},padding:8,color:'#4a5f7a'}}},scales:{y:{grid:{color:'rgba(0,200,255,.05)'},position:'left'},y2:{position:'right',grid:{display:false}},x:{grid:{display:false}}}}});
 
-                                <div class="form-group">
-                                    <label for="location">Location of Operation:</label>
-                                    <input type="text" id="location" placeholder="e.g., Industrial Plant" required>
-                                </div>
+// ── GAUGE
+const gCV=document.getElementById('gC'),gCX=gCV.getContext('2d');
+function drawG(p){
+  const cx=100,cy=100,r=78,lw=16,sa=Math.PI*.75,ea=Math.PI*2.25,fe=sa+(ea-sa)*p;
+  gCX.clearRect(0,0,200,200);
+  gCX.beginPath();gCX.arc(cx,cy,r,sa,ea);gCX.strokeStyle='rgba(255,255,255,.05)';gCX.lineWidth=lw;gCX.lineCap='round';gCX.stroke();
+  if(p>.01){const c=p<.25?'#00e676':p<.5?'#ffc107':p<.75?'#ff8c00':'#ff3535';
+    gCX.beginPath();gCX.arc(cx,cy,r,sa,fe);gCX.strokeStyle=c+'33';gCX.lineWidth=lw+8;gCX.lineCap='round';gCX.stroke();
+    gCX.beginPath();gCX.arc(cx,cy,r,sa,fe);gCX.strokeStyle=c;gCX.lineWidth=lw;gCX.lineCap='round';gCX.stroke();
+    document.getElementById('gPct').style.color=c;}
+}
+drawG(.05);
+let th=[97,98,99];
+function calc(){
+  const t=+document.getElementById('sT').value,v=+document.getElementById('sV').value,p=+document.getElementById('sP').value;
+  document.getElementById('vT').textContent=t+' °C';document.getElementById('vV').textContent=v.toFixed(1)+' mm/s';document.getElementById('vP').textContent=p+' atm';
+  th=[th[1],th[2],t];const rising=th[1]>=th[0]*1.05&&th[2]>=th[1]*1.05;
+  for(let i=0;i<3;i++){const e=document.getElementById('h'+i);e.textContent='T-'+(3-i)+': '+th[i].toFixed(0)+'°C';e.className='hb'+(i>0&&th[i]>=th[i-1]*1.05?' rz':'');}
+  let P=.05,tr=0,he=0,vi=0,pr=0;
+  if(rising){tr=.20;P+=tr;}
+  if(t>=120)he=.40;else if(t>=115)he=.30;else if(t>=110)he=.20;else if(t>=105)he=.10;P+=he;
+  if(v>=10)vi=.25;else if(v>=8)vi=.15;P+=vi;if(p<30){pr=.20;P+=pr;}
+  P=Math.max(0,Math.min(.99,P));
+  document.getElementById('gPct').textContent=Math.round(P*100)+'%';drawG(P);
+  const upd=(id,val)=>{const e=document.getElementById(id);e.textContent=val>0?'+'+Math.round(val*100)+'%':'+0%';e.className='fv '+(val>0?'fo':'ff');};
+  upd('fTr',tr);upd('fHe',he);upd('fVi',vi);upd('fPr',pr);
+  const b=document.getElementById('rBadge');
+  if(P>=.75){b.className='rb cr';b.textContent='⚠ CRITICAL';}else if(P>=.5){b.className='rb hi';b.textContent='▲ HIGH RISK';}else if(P>=.25){b.className='rb mo';b.textContent='◆ MODERATE';}else{b.className='rb lo';b.textContent='✓ LOW RISK';}
+}
 
-                                <div class="form-group">
-                                    <label for="last-repair">Last Repair Date:</label>
-                                    <input type="date" id="last-repair" required>
-                                </div>
+// ══ THREE.JS 3D ══
+let renderer3,scene3,camera3,cGroup;
+function initThree(){
+  const cv=document.getElementById('threeCanvas');
+  renderer3=new THREE.WebGLRenderer({canvas:cv,antialias:true});
+  renderer3.setPixelRatio(Math.min(window.devicePixelRatio,2));
+  renderer3.setClearColor(0x07090f,1);
+  const W=cv.parentElement.clientWidth,H=520;
+  renderer3.setSize(W,H);
+  scene3=new THREE.Scene();
+  camera3=new THREE.PerspectiveCamera(45,W/H,.1,100);
+  camera3.position.set(0,0,9);
+  scene3.add(new THREE.AmbientLight(0x334466,1.2));
+  const d1=new THREE.DirectionalLight(0x99ccff,2.5);d1.position.set(3,5,3);scene3.add(d1);
+  const d2=new THREE.DirectionalLight(0x334455,1.0);d2.position.set(-3,-2,-2);scene3.add(d2);
+  const pl=new THREE.PointLight(0x00c8ff,1.5,20);pl.position.set(2,3,2);scene3.add(pl);
+  let drag=false,px=0,py=0,rotX=0.1,rotY=0;
+  cv.addEventListener('mousedown',e=>{if(e.button===0)autoRotate=false;drag=true;px=e.clientX;py=e.clientY;});
+  cv.addEventListener('mousemove',e=>{if(!drag||!cGroup)return;rotY+=(e.clientX-px)*.008;rotX+=(e.clientY-py)*.008;cGroup.rotation.y=rotY;cGroup.rotation.x=rotX;px=e.clientX;py=e.clientY;});
+  window.addEventListener('mouseup',()=>drag=false);
+  cv.addEventListener('wheel',e=>{camera3.position.z=Math.max(2,Math.min(15,camera3.position.z+e.deltaY*.01));e.preventDefault();},{passive:false});
+  let tpx=0,tpy=0;
+  cv.addEventListener('touchstart',e=>{autoRotate=false;tpx=e.touches[0].clientX;tpy=e.touches[0].clientY;},{passive:true});
+  cv.addEventListener('touchmove',e=>{if(!cGroup)return;rotY+=(e.touches[0].clientX-tpx)*.008;rotX+=(e.touches[0].clientY-tpy)*.008;cGroup.rotation.y=rotY;cGroup.rotation.x=rotX;tpx=e.touches[0].clientX;tpy=e.touches[0].clientY;},{passive:true});
+  window.addEventListener('resize',()=>{const w2=cv.parentElement.clientWidth;renderer3.setSize(w2,H);camera3.aspect=w2/H;camera3.updateProjectionMatrix();});
+  loadModel('esp',document.querySelector('.mn-btn.active'));
+  (function loop(){requestAnimationFrame(loop);if(cGroup&&autoRotate)cGroup.rotation.y+=0.004;renderer3.render(scene3,camera3);})();
+}
+const M3=(c,me=0.8,ro=0.25)=>new THREE.MeshStandardMaterial({color:c,metalness:me,roughness:ro});
+function clearScene3(){if(cGroup){scene3.remove(cGroup);cGroup.traverse(c=>{if(c.geometry)c.geometry.dispose();});}}
 
-                                <div class="form-group full-width">
-                                    <label for="environment">Environmental Conditions:</label>
-                                    <textarea id="environment" placeholder="e.g., Corrosion, Humidity, Gas exposure" required></textarea>
-                                </div>
-                            </div>
+const MDEF={
+  esp:{name:'ESP Assembly',sub:'Electric Submersible Pump · Full unit',
+    desc:'Multi-stage centrifugal pump for downhole oil production. Installed at 1,800–2,800 m. Includes motor, seal/protector, gas separator, and multistage pump stages.',
+    specs:[['Type','Centrifugal, multi-stage'],['Depth','1,800–2,800 m'],['Flow','60–200 m³/day'],['Power','30–300 kW'],['Critical sensor','Temp, vibration']],
+    cam:[0,0,9],rx:0.1,
+    build(g){
+      const pts=[
+        {y:4.2,h:.35,r:.20,c:0x8899bb},{y:3.8,h:.50,r:.25,c:0x7788aa},
+        {y:2.25,h:2.60,r:.24,c:0x5a6a82},{y:1.40,h:.60,r:.26,c:0x6a7a92},
+        {y:.80,h:.80,r:.27,c:0x7a8a9a},{y:.30,h:.45,r:.26,c:0x6a7a8a}
+      ];
+      for(let i=0;i<10;i++)pts.push({y:-.2-i*.30,h:.22,r:i%2===0?.28:.25,c:i%2===0?0x4a5f77:0x3a4f67});
+      pts.push({y:-3.4,h:.55,r:.30,c:0x506070},{y:-3.75,h:.12,r:.22,c:0x405060});
+      pts.forEach(p=>{
+        const cyl=new THREE.Mesh(new THREE.CylinderGeometry(p.r,p.r*.97,p.h,32),M3(p.c));
+        cyl.position.set(0,p.y,0);
+        g.add(cyl);
+        const ring=new THREE.Mesh(new THREE.CylinderGeometry(p.r+.01,p.r+.01,.035,32),M3(0x334455));ring.position.y=p.y+p.h/2;g.add(ring);
+      });
+      for(let i=0;i<18;i++){const s=new THREE.Mesh(new THREE.CylinderGeometry(.025,.025,.4,8),M3(0x223344,.5,.5));s.position.set(.31,3.5-i*.42,0);g.add(s);}
+      for(let i=0;i<6;i++){const cl=new THREE.Mesh(new THREE.CylinderGeometry(.035,.035,.05,8),M3(0x556677));cl.rotation.z=Math.PI/2;cl.position.set(.18,2.5-i*.7,0);g.add(cl);}
+    }
+  },
+  impeller:{name:'Impeller',sub:'Centrifugal stage impeller · Pump section',
+    desc:'Transfers mechanical energy to fluid. Wear or imbalance causes vibration increase and efficiency loss. Critical component — 45% of ESP failures involve impeller degradation.',
+    specs:[['Role','Fluid energy transfer'],['Failure share','45% of ESP failures'],['Material','Hardened alloy steel'],['Blades','10 backward-curved'],['Signal','Vibration + flow drop']],
+    cam:[0,2,6],rx:0.5,
+    build(g){
+      const base1=new THREE.Mesh(new THREE.CylinderGeometry(1.25,1.10,.09,64),M3(0x445566));
+      base1.position.set(0,-.35,0);g.add(base1);
+      const base2=new THREE.Mesh(new THREE.CylinderGeometry(.82,.82,.07,64),M3(0x445566));
+      base2.position.set(0,.30,0);g.add(base2);
+      g.add(new THREE.Mesh(new THREE.CylinderGeometry(.19,.19,.80,32),M3(0x506070,.9,.2)));
+      g.add(new THREE.Mesh(new THREE.CylinderGeometry(.08,.08,.85,16),M3(0x1a2230,.9,.5)));
+      for(let i=0;i<10;i++){
+        const a=(i/10)*Math.PI*2,blade=new THREE.Mesh(new THREE.BoxGeometry(.07,.60,.95),M3(0x607888,.75,.3));
+        blade.position.set(Math.cos(a)*.65,-.02,Math.sin(a)*.65);blade.rotation.y=-a+.45;blade.rotation.z=.12;g.add(blade);
+        const f=new THREE.Mesh(new THREE.CylinderGeometry(.04,.04,.10,8),M3(0x506070));f.position.set(Math.cos(a)*.25,-.02,Math.sin(a)*.25);g.add(f);
+      }
+      for(let i=0;i<5;i++){const a=(i/5)*Math.PI*2,h2=new THREE.Mesh(new THREE.CylinderGeometry(.04,.04,.12,12),M3(0x1a2230,.9,.5));h2.position.set(Math.cos(a)*.55,-.35,Math.sin(a)*.55);g.add(h2);}
+      const kw=new THREE.Mesh(new THREE.BoxGeometry(.07,.18,.05),M3(0x334455));kw.position.set(.19,0,0);g.add(kw);
+    }
+  },
+  shaft:{name:'Pump Shaft',sub:'Drive shaft · Motor to impeller torque transmission',
+    desc:'Transmits torque from motor to pump impellers. Subject to bending, torsional fatigue, and vibration. Failure modes include fatigue fracture, corrosion, and wear from sand contact.',
+    specs:[['Role','Torque transmission'],['Failure modes','Fatigue, bending, torsion'],['Material','Alloy steel Cr-Ni'],['Length','Up to 8 m'],['Monitor via','Vibration sensors']],
+    cam:[0,0,9],rx:0.3,
+    build(g){
+      g.add(new THREE.Mesh(new THREE.CylinderGeometry(.09,.09,5.8,32),M3(0x7a8fa0,.88,.18)));
+      [[2.55,.14,.28,0x5a6f80],[2.25,.11,.28,0x6a7f90],[1.5,.115,.22,0x5a6f80],[.5,.115,.22,0x5a6f80],[-.5,.115,.22,0x5a6f80],[-1.5,.115,.22,0x5a6f80],[-2.25,.11,.28,0x6a7f90],[-2.55,.14,.28,0x5a6f80]].forEach(([y,r,h,c])=>{const m=new THREE.Mesh(new THREE.CylinderGeometry(r,r,h,32),M3(c));m.position.y=y;g.add(m);});
+      const col=new THREE.Mesh(new THREE.CylinderGeometry(.20,.20,.12,32),M3(0x445566,.9,.15));col.position.y=0;g.add(col);
+      [-2.4,2.4].forEach(y=>{const k=new THREE.Mesh(new THREE.BoxGeometry(.06,.35,.08),M3(0x2a3a4a));k.position.set(.14,y,0);g.add(k);});
+      g.add(new THREE.Mesh(new THREE.CylinderGeometry(.03,.03,5.85,12),M3(0x1a2530,.9,.6)));
+      [-2.92,2.92].forEach(y=>{const t=new THREE.Mesh(new THREE.CylinderGeometry(.04,.09,.1,16),M3(0x7a8fa0));t.position.y=y;if(y<0)t.scale.y=-1;g.add(t);});
+    }
+  }
+};
 
-                            <button type="submit" class="analyze-btn">Analyze Reliability</button>
-                        </form>
-                    </div>
+function loadModel(name,btn){
+  document.querySelectorAll('.mn-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');
+  clearScene3();const M=MDEF[name];
+  const targetCam=M.cam||[0,0,9];camera3.position.set(...targetCam);camera3.updateProjectionMatrix();
+  if(name==='shaft'){
+    if(typeof THREE.OBJLoader==='undefined'){console.error('OBJLoader not available');}
+    else{
+      const loader=new THREE.OBJLoader();
+      loader.load('img/pump-shaft.obj',object=>{
+        object.traverse(child=>{
+          if(child.isMesh){child.castShadow=true;child.receiveShadow=true;child.material=M3(0x7a8fa0,.88,.18);}
+        });
+        const box=new THREE.Box3().setFromObject(object);
+        const size=box.getSize(new THREE.Vector3());
+        const maxDim=Math.max(size.x,size.y,size.z)||1;
+        const scale=6/maxDim;
+        object.scale.setScalar(scale);
+        box.setFromObject(object);
+        const center=box.getCenter(new THREE.Vector3());
+        object.position.sub(center);
+        scene3.add(object);cGroup=object;
+      },undefined,error=>{console.error('Failed to load pump-shaft.obj:',error);});
+    }
+  } else {
+    cGroup=null; // no model preview for ESP Assembly or Impeller
+  }
+  document.getElementById('modelInfo').innerHTML=`<div class="info-name">${M.name}</div><div class="info-sub">${M.sub}</div><div style="margin:1rem 0;font-size:12px;color:#7a94b0;line-height:1.7">${M.desc}</div>${M.specs.map(([l,v])=>`<div class="spec-row"><span class="spec-l">${l}</span><span class="spec-v">${v}</span></div>`).join('')}`;
+}
 
-                    <div class="results-section" id="results-section" style="display: none;">
-                        <div id="warnings-section" style="display: none; margin-bottom: 20px;"></div>
-                        <div id="results" class="results-grid">
-                            <div class="result-card">
-                                <h4>Failure Probability</h4>
-                                <p id="failure-prob"></p>
-                            </div>
-                            <div class="result-card">
-                                <h4>Common Failure Causes</h4>
-                                <p id="common-causes"></p>
-                            </div>
-                            <div class="result-card">
-                                <h4>Average Lifespan</h4>
-                                <p id="avg-lifetime"></p>
-                            </div>
-                            <div class="result-card">
-                                <h4>Similar Equipment Stats</h4>
-                                <p id="similar-stats"></p>
-                            </div>
-                            <div class="result-card">
-                                <h4>Maintenance Recommendations</h4>
-                                <p id="maintenance-rec"></p>
-                            </div>
-                            <div class="result-card">
-                                <h4>Next Failure Likely</h4>
-                                <p id="next-failure"></p>
-                            </div>
-                        </div>
-                        <div class="chart-container">
-                            <h4>Reliability Chart</h4>
-                            <canvas id="reliability-chart"></canvas>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-    </main>
+// ══ DATASET ══
+function rng(s){return()=>{s=(s*9301+49297)%233280;return s/233280;}}
+const TYPES_DS=[
+  ...Array.from({length:20},(_,i)=>{const cl=['K01','K02','K03','K04','K05'][Math.floor(i/4)];return{id:`ESP_${cl}_${String(i%4+1).padStart(2,'0')}`,type:'ESP',cluster:cl};}),
+  ...['K01','K02','K03','K04','K05'].map(c=>({id:`SEP_${c}_01`,type:'SEP',cluster:c})),
+  ...['K01','K02','K03','K04','K05'].map(c=>({id:`AGZU_${c}_01`,type:'AGZU',cluster:c})),
+  ...[1,2,3].map(i=>({id:`COMP_CPS_0${i}`,type:'COMP',cluster:'CPS'})),
+  ...[1,2,3].map(i=>({id:`HX_CPS_0${i}`,type:'HX',cluster:'CPS'})),
+  ...[1,2].map(i=>({id:`GEN_CPS_0${i}`,type:'GEN',cluster:'CPS'})),
+  ...[1,2].map(i=>({id:`GTU_CPS_0${i}`,type:'GTU',cluster:'CPS'})),
+  ...[1,2].map(i=>({id:`WIP_CPS_0${i}`,type:'WIMP',cluster:'CPS'})),
+];
+function genDS(n=500){
+  const r=rng(42);const rows=[];const start=new Date('2026-01-01T00:00:00Z');
+  const fails=new Set();for(let i=0;i<119;i++)fails.add(Math.floor(r()*n));
+  const modes=['impeller_wear','overheating','cable_break','seal_failure'];
+  for(let i=0;i<n;i++){
+    const a=TYPES_DS[i%TYPES_DS.length];const ts=new Date(start.getTime()+i*3600000*17);
+    const iF=fails.has(i);const mo=ts.getMonth();const wb=(mo<=1||mo>=11)?1.08:1.0;const deg=iF?1+r()*.5:1.0;
+    const tBase=a.type==='ESP'?98+r()*15:70+r()*20;const vBase=a.type==='ESP'?5+r()*4:2+r()*3;
+    const rc=iF?+(15000+r()*30000).toFixed(0):0,pl=iF?+(8000+r()*4000).toFixed(0):0;
+    rows.push({timestamp:ts.toISOString().replace('T',' ').substring(0,16),asset_id:a.id,asset_type:a.type,cluster:a.cluster,
+      temp_motor:+(tBase*wb*deg).toFixed(1),vibration:+(vBase*wb*(iF?deg*1.3:1)).toFixed(2),
+      pressure_intake:+(Math.max(15,40-(iF?r()*15:r()*5))).toFixed(1),flow_rate:+(Math.max(40,150-(iF?r()*60:r()*20))).toFixed(1),
+      current:+(80+r()*40).toFixed(1),voltage:+(3280+r()*240-(iF?r()*200:0)).toFixed(0),rpm:+(2950+r()*100-(iF?r()*150:0)).toFixed(0),
+      rul_hours:iF?+(r()*168).toFixed(0):+(720+r()*4000).toFixed(0),
+      fail_label_24h:iF&&r()<.4?1:0,fail_label_7d:iF?1:0,fail_label_30d:iF||r()<.08?1:0,
+      failure_mode:iF?modes[Math.floor(r()*4)]:'normal',
+      repair_cost_usd:rc,production_loss_usd:pl,total_loss_usd:rc+pl});
+  }
+  return rows;
+}
+let fullDS=[],dsSort='',dsSortD=1,dsPage=0;const PG=20;
+function initDS(){
+  fullDS=genDS(500);
+  const fails=fullDS.filter(r=>r.fail_label_7d===1).length;
+  const at=(fullDS.reduce((s,r)=>s+r.temp_motor,0)/fullDS.length).toFixed(1);
+  const av=(fullDS.reduce((s,r)=>s+r.vibration,0)/fullDS.length).toFixed(2);
+  document.getElementById('ds-tot').textContent=fullDS.length;document.getElementById('ds-fl').textContent=fails;
+  document.getElementById('ds-tp').textContent=at;document.getElementById('ds-vb').textContent=av;
+  renderTbl();
+}
+function renderTbl(){
+  const srch=document.getElementById('ds-search').value.toLowerCase();
+  const tf=document.getElementById('ds-type').value;const ff=document.getElementById('ds-fail').value;
+  let d=fullDS.filter(r=>{
+    if(srch&&!r.asset_id.toLowerCase().includes(srch))return false;
+    if(tf&&r.asset_type!==tf)return false;
+    if(ff!==''&&String(r.fail_label_7d)!==ff)return false;
+    return true;
+  });
+  if(dsSort)d.sort((a,b)=>(a[dsSort]>b[dsSort]?1:-1)*dsSortD);
+  const total=d.length,pages=Math.ceil(total/PG);
+  if(dsPage>=pages)dsPage=Math.max(0,pages-1);
+  const sl=d.slice(dsPage*PG,dsPage*PG+PG);
+  document.getElementById('dsBody').innerHTML=sl.map(r=>{
+    const ft=r.fail_label_7d===1?'<span class="tf">FAIL</span>':'<span class="to">OK</span>';
+    const mt=r.failure_mode==='normal'?`<span style="color:var(--mt)">normal</span>`:r.failure_mode==='overheating'?`<span class="tf">${r.failure_mode}</span>`:`<span class="tw">${r.failure_mode}</span>`;
+    const tc=r.temp_motor>=115?'color:var(--dn)':r.temp_motor>=105?'color:var(--am)':'';
+    const vc=r.vibration>=10?'color:var(--dn)':r.vibration>=8?'color:var(--am)':'';
+    const ls=r.total_loss_usd>0?`<span style="color:var(--dn)">$${r.total_loss_usd.toLocaleString()}</span>`:'<span style="color:var(--mt)">—</span>';
+    return`<tr><td style="color:var(--mt)">${r.timestamp}</td><td style="color:var(--ac)">${r.asset_id}</td><td><span style="background:rgba(0,200,255,.08);border-radius:4px;padding:2px 6px;font-size:10px">${r.asset_type}</span></td><td style="color:var(--mt)">${r.cluster}</td><td style="${tc}">${r.temp_motor}</td><td style="${vc}">${r.vibration}</td><td>${r.pressure_intake}</td><td>${r.flow_rate}</td><td style="${r.rul_hours<200?'color:var(--dn)':''}">${r.rul_hours}</td><td>${ft}</td><td>${mt}</td><td>${ls}</td></tr>`;
+  }).join('');
+  const pc=document.getElementById('pgCtrl');
+  pc.innerHTML=`<span style="color:var(--mt)">${total} rows · page ${dsPage+1}/${pages||1}</span>`;
+  for(let i=0;i<Math.min(pages,8);i++)pc.insertAdjacentHTML('beforeend',`<button class="pg-b${i===dsPage?' cur2':''}" onclick="goPg(${i})">${i+1}</button>`);
+}
+function goPg(p){dsPage=p;renderTbl();}
+function srtBy(c){if(dsSort===c)dsSortD*=-1;else{dsSort=c;dsSortD=1;}dsPage=0;renderTbl();}
+function dlCSV(){
+  const cols=['timestamp','asset_id','asset_type','cluster','temp_motor','vibration','pressure_intake','flow_rate','current','voltage','rpm','rul_hours','fail_label_24h','fail_label_7d','fail_label_30d','failure_mode','repair_cost_usd','production_loss_usd','total_loss_usd'];
+  const lines=[cols.join(',')];
+  fullDS.forEach(r=>lines.push(cols.map(c=>JSON.stringify(r[c]??'')).join(',')));
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([lines.join('\n')],{type:'text/csv'}));a.download='field_x_dataset_2026.csv';a.click();
+}
 
-    <script src="js/script.js"></script>
+// ══ AI ══
+async function runAI(){
+  const btn=document.getElementById('runBtn'),body=document.getElementById('respBody');
+const eq=document.getElementById('eqType').value;
+  const hrs=parseInt(document.getElementById('aiHrs').value,10)||4380;
+  const temp=document.getElementById('aiTemp').value;
+  const vib=parseFloat(document.getElementById('aiVib').value)||0;
+  const press=document.getElementById('aiPress').value;
+  const notes=document.getElementById('aiNotes').value.trim()||'Standard ESP operating conditions.';
+  btn.disabled=true;btn.textContent='⏳ Analyzing...';
+  body.innerHTML='<div style="color:var(--mt);font-family:var(--mn);font-size:12px">Sending request<span class="cur">▌</span></div>';
+  try{
+    const res=await fetch('/api/analyze',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({eqType:eq,aiHrs:hrs,aiTemp:temp,aiVib:vib,aiPress:press,aiNotes:notes})});
+    if(!res.ok){const errText=await res.text();throw new Error(errText||'HTTP '+res.status);}
+    const result=await res.json();
+    if(result.error){throw new Error(result.error);}
+    body.innerHTML=`<div class="info-name">AI Reliability Analysis</div>
+      <div class="info-sub">Groq backend analysis</div>
+      <div style="margin:1rem 0;font-size:12px;color:#7a94b0;line-height:1.7">
+        <strong>Failure Probability:</strong> ${result.failureProb}%<br>
+        <strong>Common Causes:</strong> ${result.commonCauses}<br>
+        <strong>Avg Lifetime:</strong> ${result.avgLifetime} hours<br>
+        <strong>Next Failure:</strong> ${result.nextFailure}
+      </div>
+      <div class="spec-row"><span class="spec-l">Failure Rate</span><span class="spec-v">${result.similarStats?.failureRatePercentage ?? 'N/A'}%</span></div>
+      <div class="spec-row"><span class="spec-l">MTBF</span><span class="spec-v">${result.similarStats?.meanTimeBetweenFailureHours ?? 'N/A'} h</span></div>
+      <div class="spec-row"><span class="spec-l">Common Modes</span><span class="spec-v">${result.similarStats?.commonFailureModes ?? 'N/A'}</span></div>
+      <div style="margin-top:1rem;font-size:12px;color:#7a94b0;line-height:1.7"><strong>Maintenance:</strong> ${result.maintenanceRec}</div>
+    `;
+    if(result.warnings?.length){body.innerHTML+=`<div style="margin-top:1rem;color:#ffb347;font-size:11px">Warnings: ${result.warnings.join(', ')}</div>`;}
+  }catch(err){
+    body.innerHTML=`<div style="color:var(--dn);font-family:var(--mn);font-size:12px">Error: ${err.message}<br><br><span style="color:var(--mt)">Set GROQ_API_KEY in the server environment for AI analysis.</span></div>`;
+  }
+  btn.disabled=false;btn.textContent='⚡ Analyze';
+}
+
+// ══ LITERATURE ══
+const LIT=[
+  {y:2019,t:'Real-Time Monitoring and Predictive Failure Identification for Electrical Submersible Pumps',a:'Bhardwaj A.S., Saraf R., Nair G.G., Vallabhaneni S.',v:'ADIPEC',d:'PCA-based Hotelling\'s T² + XGBoost residual model. Detects ESP failures up to 40 days in advance, reducing non-productive time vs reactive maintenance.',u:'https://onepetro.org/SPEADIP/proceedings-abstract/19ADIP/1-19ADIP/D031S054R003/217147'},
+  {y:2020,t:'Oilfield Virtual Twin',a:'Konchenko A., Chatar C., Doronichev S., Saetern D., Bruns J.',v:'SPE Annual Technical Conference & Exhibition',d:'Three-tier Virtual Twin: static planning, dynamic real-time IIoT, and prognostic self-correcting. Deployed across 1,000+ well pads — improved pumping hours and inter-stage KPIs.',u:'https://onepetro.org/SPEATCE/proceedings-abstract/20ATCE/3-20ATCE/D031S031R001/452928'},
+  {y:2021,t:'Digital Oil Field: The NPDC Experience',a:'Ijomanta H., Lawal L., Ike O., Olugbade R., Gbuku F., Akenobo C.',v:'SPE Nigeria Annual International Conference',d:'Full-cycle Digital Oilfield for Oredo condensate field. Virtual Metering via RPMA + PI Historian reduced decision-making from weeks to minutes.',u:'https://onepetro.org/SPENIACE/proceedings-abstract/21NACE/3-21NACE/D031S012R003/467547'},
+  {y:2022,t:'Virtual Field Trips: Experience from a Global Pandemic and Beyond',a:'Buckley S.J., Howell J.A., Naumann N., Pugsley J. et al.',v:'SPE Norway Subsurface Conference',d:'3D virtual outcrop databases with LIME visualization for geoscience education. Thematic organization independent of geography enhances knowledge transfer.',u:'https://onepetro.org/SPENOSC/proceedings-abstract/22NOSC/22NOSC/D011S005R002/509553'},
+  {y:2024,t:'Oil and Gas Field Digital Twin Full Lifecycle Management Platform Based on Meta-Universe Technology',a:'Zhang Y., Song Z., Lu X., Chen B., Zhang Q., Su G.',v:'ADIPEC 2024',d:'Full-lifecycle DT (IoT+AI+VR) for West Africa oilfield. Compressor fault: 95% accuracy, 90% early warning. Results: 37% cost reduction, 75% faster fault resolution.',u:'https://onepetro.org/SPEADIP/proceedings-abstract/24ADIP/24ADIP/D011S027R005/3840266'},
+  {y:2025,t:'Real-Time Production Optimization: A Machine Learning Approach to Virtual Flow Metering',a:'Korish M., Ibrahim M., Tealdi L., Al Hanaee A.',v:'GOTECH Conference',d:'14 ML algorithms across Egypt and Iraq fields. XGBoost + LightGBM achieve RMSE 0.976. Enables continuous daily production allocation without well tests.',u:'https://onepetro.org/SPEGOTS/proceedings-abstract/25GOTS/25GOTS/D032S006R003/4729430'}
+];
+const lg=document.getElementById('litGrid');
+LIT.forEach(i=>lg.insertAdjacentHTML('beforeend',`<div class="lc"><div><div class="lyr">${i.y}</div><div class="ltg">OnePetro</div></div><div><div class="ltt">${i.t}</div><div class="lau">${i.a}</div><div class="lven">${i.v}</div><div class="ld">${i.d}</div><a class="ll" href="${i.u}" target="_blank" rel="noopener">🔗 ${i.u}</a></div></div>`));
+</script>
 </body>
 </html>

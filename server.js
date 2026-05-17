@@ -21,6 +21,20 @@ const groq = new Groq({
     apiKey: process.env.GROQ_API_KEY
 });
 
+function normalizeAnalysisInput(data) {
+    return {
+        type: (data.type || data.eqType || 'ESP pump').trim(),
+        manufacturer: (data.manufacturer || 'ESP equipment').trim(),
+        model: (data.model || 'Field X ESP').trim(),
+        year: Number(data.year || data.aiYear || 2024) || 2024,
+        pressureTemp: (data.pressureTemp || data.aiPress || '35 atm').trim(),
+        hours: Number(data.hours || data.aiHrs || 4380) || 4380,
+        location: (data.location || 'Field X, Almaty').trim(),
+        lastRepair: data.lastRepair || data.aiLastRepair || new Date(Date.now() - 1000 * 60 * 60 * 24 * 90).toISOString().split('T')[0],
+        environment: (data.environment || data.aiNotes || data.notes || 'Standard ESP operating conditions.').trim()
+    };
+}
+
 // Validate input data quality
 function validateInputData(data) {
     const issues = [];
@@ -257,8 +271,10 @@ function analyzeEquipment(data) {
 
 // Endpoint for analysis
 app.post('/api/analyze', async (req, res) => {
-    const data = req.body;
-    console.log('Received analysis request:', data);
+    const rawData = req.body;
+    const data = normalizeAnalysisInput(rawData);
+    console.log('Received analysis request:', rawData);
+    console.log('Normalized analysis data:', data);
 
     // Validate input data
     const validation = validateInputData(data);
@@ -295,8 +311,9 @@ EQUIPMENT DETAILS:
 - Last Repair: ${data.lastRepair}
 - Environment: ${data.environment}
 
-Based on industry standards and historical data for similar equipment, provide analysis in this EXACT JSON format:
+Use the sensor-driven Field X context: ESP pumps at 1800–2800m depth, medium vibration, occasional sand and corrosion. Give practical, oilfield-aware analysis.
 
+Provide your output in this exact JSON format only:
 {
   "failureProb": 12.5,
   "commonCauses": "Bearing wear, Seal leakage, Electrical faults, Corrosion",
