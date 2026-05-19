@@ -145,7 +145,7 @@ tbody td{padding:8px 12px}
     <button class="tb" onclick="sw('twin',this)">ESP Twin</button>
     <button class="tb" onclick="sw('3d',this)">3D Models</button>
     <button class="tb" onclick="sw('data',this)">Dataset</button>
-    <button class="tb" onclick="sw('ai',this)">AI Analysis</button>
+    <button class="tb" onclick="sw('ai',this)">ML Analysis</button>
     <button class="tb" onclick="sw('lit',this)">References</button>
   </nav>
   <div class="live">LIVE · 2026</div>
@@ -208,6 +208,7 @@ tbody td{padding:8px 12px}
     <button class="mn-btn active" onclick="loadModel('esp',this)">ESP Assembly</button>
     <button class="mn-btn" onclick="loadModel('impeller',this)">Impeller</button>
     <button class="mn-btn" onclick="loadModel('shaft',this)">Pump Shaft</button>
+    <button class="mn-btn" onclick="loadModel('separator',this)">Separator</button>
   </div>
   <div class="model-wrap">
     <div class="canvas-card"><canvas id="threeCanvas"></canvas><div class="drag-hint">Drag to rotate · Scroll to zoom</div></div>
@@ -404,6 +405,16 @@ const MDEF={
       [-2.92,2.92].forEach(y=>{const t=new THREE.Mesh(new THREE.CylinderGeometry(.04,.09,.1,16),M3(0x7a8fa0));t.position.y=y;if(y<0)t.scale.y=-1;g.add(t);});
     }
   }
+  ,
+  separator:{name:'Separator',sub:'Gas separator / protector unit',
+    desc:'Separates gas from produced liquids and protects downstream equipment. Useful for visual inspection and component orientation.',
+    specs:[['Role','Gas-liquid separation'],['Type','Inline protector/separator'],['Material','Alloy steel'],['Inspection','Visual']],
+    obj:'separator.obj',matColor:0x556677,cam:[0,0,10],rx:0.2,
+    build(g){
+      const body=new THREE.Mesh(new THREE.CylinderGeometry(.6,.6,.25,32),M3(0x556677));body.position.y=0;g.add(body);
+      const top=new THREE.Mesh(new THREE.CylinderGeometry(.45,.45,.08,32),M3(0x445566));top.position.y=.18;g.add(top);
+    }
+  }
 };
 
 function loadModel(name,btn){
@@ -525,7 +536,7 @@ const eq=document.getElementById('eqType').value;
     if(!res.ok){const errText=await res.text();throw new Error(errText||'HTTP '+res.status);}
     const result=await res.json();
     if(result.error){throw new Error(result.error);}
-    body.innerHTML=`<div class="info-name">AI Reliability Analysis</div>
+    body.innerHTML=`<div class="info-name">ML Reliability Analysis</div>
       <div class="info-sub">Groq backend analysis</div>
       <div style="margin:1rem 0;font-size:12px;color:#7a94b0;line-height:1.7">
         <strong>Failure Probability:</strong> ${result.failureProb}%<br>
