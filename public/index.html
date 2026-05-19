@@ -352,7 +352,7 @@ const MDEF={
   esp:{name:'ESP Assembly',sub:'Electric Submersible Pump · Full unit',
     desc:'Multi-stage centrifugal pump for downhole oil production. Installed at 1,800–2,800 m. Includes motor, seal/protector, gas separator, and multistage pump stages.',
     specs:[['Type','Centrifugal, multi-stage'],['Depth','1,800–2,800 m'],['Flow','60–200 m³/day'],['Power','30–300 kW'],['Critical sensor','Temp, vibration']],
-    cam:[0,0,9],rx:0.1,
+    obj:'esp-assembly.obj',matColor:0x8899bb,cam:[0,0,9],rx:0.1,
     build(g){
       const pts=[
         {y:4.2,h:.35,r:.20,c:0x8899bb},{y:3.8,h:.50,r:.25,c:0x7788aa},
@@ -374,7 +374,7 @@ const MDEF={
   impeller:{name:'Impeller',sub:'Centrifugal stage impeller · Pump section',
     desc:'Transfers mechanical energy to fluid. Wear or imbalance causes vibration increase and efficiency loss. Critical component — 45% of ESP failures involve impeller degradation.',
     specs:[['Role','Fluid energy transfer'],['Failure share','45% of ESP failures'],['Material','Hardened alloy steel'],['Blades','10 backward-curved'],['Signal','Vibration + flow drop']],
-    cam:[0,2,6],rx:0.5,
+    obj:'impeller.obj',matColor:0x445566,cam:[0,0,9],rx:0.5,
     build(g){
       const base1=new THREE.Mesh(new THREE.CylinderGeometry(1.25,1.10,.09,64),M3(0x445566));
       base1.position.set(0,-.35,0);g.add(base1);
@@ -394,7 +394,7 @@ const MDEF={
   shaft:{name:'Pump Shaft',sub:'Drive shaft · Motor to impeller torque transmission',
     desc:'Transmits torque from motor to pump impellers. Subject to bending, torsional fatigue, and vibration. Failure modes include fatigue fracture, corrosion, and wear from sand contact.',
     specs:[['Role','Torque transmission'],['Failure modes','Fatigue, bending, torsion'],['Material','Alloy steel Cr-Ni'],['Length','Up to 8 m'],['Monitor via','Vibration sensors']],
-    cam:[0,0,9],rx:0.3,
+    obj:'pump-shaft.obj',matColor:0x7a8fa0,cam:[0,0,9],rx:0.3,
     build(g){
       g.add(new THREE.Mesh(new THREE.CylinderGeometry(.09,.09,5.8,32),M3(0x7a8fa0,.88,.18)));
       [[2.55,.14,.28,0x5a6f80],[2.25,.11,.28,0x6a7f90],[1.5,.115,.22,0x5a6f80],[.5,.115,.22,0x5a6f80],[-.5,.115,.22,0x5a6f80],[-1.5,.115,.22,0x5a6f80],[-2.25,.11,.28,0x6a7f90],[-2.55,.14,.28,0x5a6f80]].forEach(([y,r,h,c])=>{const m=new THREE.Mesh(new THREE.CylinderGeometry(r,r,h,32),M3(c));m.position.y=y;g.add(m);});
@@ -410,29 +410,27 @@ function loadModel(name,btn){
   document.querySelectorAll('.mn-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');
   clearScene3();const M=MDEF[name];
   const targetCam=M.cam||[0,0,9];camera3.position.set(...targetCam);camera3.updateProjectionMatrix();
-  if(name==='shaft'){
-    if(typeof THREE.OBJLoader==='undefined'){console.error('OBJLoader not available');}
-    else{
-      const loader=new THREE.OBJLoader();
-      loader.load('img/pump-shaft.obj',object=>{
-        object.traverse(child=>{
-          if(child.isMesh){child.castShadow=true;child.receiveShadow=true;child.material=M3(0x7a8fa0,.88,.18);}
-        });
-        const box=new THREE.Box3().setFromObject(object);
-        const size=box.getSize(new THREE.Vector3());
-        const maxDim=Math.max(size.x,size.y,size.z)||1;
-        const scale=6/maxDim;
-        object.scale.setScalar(scale);
-        box.setFromObject(object);
-        const center=box.getCenter(new THREE.Vector3());
-        object.position.sub(center);
-        scene3.add(object);cGroup=object;
-      },undefined,error=>{console.error('Failed to load pump-shaft.obj:',error);});
-    }
-  } else {
-    cGroup=null; // no model preview for ESP Assembly or Impeller
-  }
   document.getElementById('modelInfo').innerHTML=`<div class="info-name">${M.name}</div><div class="info-sub">${M.sub}</div><div style="margin:1rem 0;font-size:12px;color:#7a94b0;line-height:1.7">${M.desc}</div>${M.specs.map(([l,v])=>`<div class="spec-row"><span class="spec-l">${l}</span><span class="spec-v">${v}</span></div>`).join('')}`;
+  if(M.obj && typeof THREE.OBJLoader!=='undefined'){
+    const loader=new THREE.OBJLoader();
+    loader.load(`img/${M.obj}`,object=>{
+      object.traverse(child=>{if(child.isMesh){child.castShadow=true;child.receiveShadow=true;child.material=M3(M.matColor||0x7a8fa0,.88,.18);}});
+      const box=new THREE.Box3().setFromObject(object);
+      const size=box.getSize(new THREE.Vector3());
+      const maxDim=Math.max(size.x,size.y,size.z)||1;
+      const scale=6/maxDim;
+      object.scale.setScalar(scale);
+      object.updateMatrixWorld(true);
+      const center=new THREE.Box3().setFromObject(object).getCenter(new THREE.Vector3());
+      object.position.sub(center);
+      scene3.add(object);cGroup=object;
+    },undefined,error=>{
+      console.error(`Failed to load ${M.obj}:`,error);
+      const g=new THREE.Group();M.build(g);g.rotation.x=M.rx||.1;scene3.add(g);cGroup=g;
+    });
+  } else {
+    const g=new THREE.Group();M.build(g);g.rotation.x=M.rx||.1;scene3.add(g);cGroup=g;
+  }
 }
 
 // ══ DATASET ══
