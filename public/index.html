@@ -244,11 +244,8 @@ tbody td{padding:8px 12px}
   <div class="sh"><div class="st">ML-Powered <em>ESP Analysis</em></div><div class="ss">Powered by Groq · ESP-specialized failure assessment · Field X context</div></div>
   <div class="ai-grid">
     <div class="pn">
-      <div class="fg"><label class="form-lbl">Equipment Type</label><select class="fi-s" id="eqType"><option>ESP pump (centrifugal, multi-stage)</option><option>Electric motor (ESP downhole)</option><option>Seal / protector unit</option><option>Gas separator (AGZU)</option><option>Reciprocating compressor (CPS)</option><option>Water injection pump</option></select></div>
-      <div class="fg"><label class="form-lbl">Operating Hours</label><input type="number" class="fi-i" id="aiHrs" value="4380"></div>
-      <div class="fg"><label class="form-lbl">Motor Temperature (°C)</label><input type="number" class="fi-i" id="aiTemp" value="108"></div>
-      <div class="fg"><label class="form-lbl">Vibration (mm/s)</label><input type="number" class="fi-i" id="aiVib" value="8.3" step="0.1"></div>
-      <div class="fg"><label class="form-lbl">Intake Pressure (atm)</label><input type="number" class="fi-i" id="aiPress" value="35"></div>
+      <div class="fg"><label class="form-lbl">Equipment Type</label><select class="fi-s" id="eqType" onchange="renderAIFields(this.value)"><option>ESP pump (centrifugal, multi-stage)</option><option>Electric motor (ESP downhole)</option><option>Seal / protector unit</option><option>Gas separator (AGZU)</option><option>Reciprocating compressor (CPS)</option><option>Water injection pump</option></select></div>
+      <div id="aiFields"></div>
       <div class="fg"><label class="form-lbl">Additional Notes</label><textarea class="fi-t" id="aiNotes" placeholder="e.g. sand production, cable replacement 6 months ago, winter conditions..."></textarea></div>
       <button class="btn-run" id="runBtn" onclick="runAI()">⚡ Analyze</button>
     </div>
@@ -521,18 +518,83 @@ function dlCSV(){
 }
 
 // ══ AI ══
+const AI_FIELD_SETS = {
+  'ESP pump (centrifugal, multi-stage)': [
+    {id:'aiHrs',label:'Operating Hours',type:'number',step:'1',value:'4380',placeholder:'Hours'},
+    {id:'aiTemp',label:'Motor Temperature (°C)',type:'number',step:'1',value:'108',placeholder:'°C'},
+    {id:'aiVib',label:'Vibration (mm/s)',type:'number',step:'0.1',value:'8.3',placeholder:'mm/s'},
+    {id:'aiPress',label:'Intake Pressure (atm)',type:'number',step:'1',value:'35',placeholder:'atm'},
+    {id:'aiFlow',label:'Flow Rate (m³/d)',type:'number',step:'1',value:'140',placeholder:'m³/d'},
+    {id:'aiSand',label:'Sand Content (%)',type:'number',step:'0.1',value:'1.2',placeholder:'%'},
+  ],
+  'Electric motor (ESP downhole)': [
+    {id:'aiHrs',label:'Operating Hours',type:'number',step:'1',value:'4200',placeholder:'Hours'},
+    {id:'aiTemp',label:'Winding Temperature (°C)',type:'number',step:'1',value:'102',placeholder:'°C'},
+    {id:'aiVib',label:'Vibration (mm/s)',type:'number',step:'0.1',value:'7.5',placeholder:'mm/s'},
+    {id:'aiCurrent',label:'Current (A)',type:'number',step:'0.1',value:'132.5',placeholder:'A'},
+    {id:'aiVoltage',label:'Voltage (V)',type:'number',step:'1',value:'3200',placeholder:'V'},
+    {id:'aiInsulation',label:'Insulation Resistance (MΩ)',type:'number',step:'0.1',value:'12.5',placeholder:'MΩ'},
+  ],
+  'Seal / protector unit': [
+    {id:'aiHrs',label:'Operating Hours',type:'number',step:'1',value:'5600',placeholder:'Hours'},
+    {id:'aiSealTemp',label:'Seal Temperature (°C)',type:'number',step:'1',value:'95',placeholder:'°C'},
+    {id:'aiLubricant',label:'Lubricant Level (%)',type:'number',step:'1',value:'82',placeholder:'%'},
+    {id:'aiDiffPress',label:'Pressure Differential (atm)',type:'number',step:'0.1',value:'2.4',placeholder:'atm'},
+    {id:'aiLeak',label:'Leak Indication',type:'text',value:'No visible leak',placeholder:'e.g. No visible leak'},
+  ],
+  'Gas separator (AGZU)': [
+    {id:'aiHrs',label:'Operating Hours',type:'number',step:'1',value:'3900',placeholder:'Hours'},
+    {id:'aiGasTemp',label:'Gas Temperature (°C)',type:'number',step:'1',value:'46',placeholder:'°C'},
+    {id:'aiGOR',label:'Gas/Oil Ratio',type:'number',step:'1',value:'220',placeholder:'GOR'},
+    {id:'aiDiffPress',label:'Pressure Differential (atm)',type:'number',step:'0.1',value:'1.8',placeholder:'atm'},
+    {id:'aiLCO',label:'Liquid Carryover (%)',type:'number',step:'0.1',value:'0.9',placeholder:'%'},
+  ],
+  'Reciprocating compressor (CPS)': [
+    {id:'aiHrs',label:'Operating Hours',type:'number',step:'1',value:'7200',placeholder:'Hours'},
+    {id:'aiSuction',label:'Suction Pressure (bar)',type:'number',step:'0.1',value:'4.1',placeholder:'bar'},
+    {id:'aiDischarge',label:'Discharge Pressure (bar)',type:'number',step:'0.1',value:'9.2',placeholder:'bar'},
+    {id:'aiVib',label:'Vibration (mm/s)',type:'number',step:'0.1',value:'9.1',placeholder:'mm/s'},
+    {id:'aiOilTemp',label:'Oil Temperature (°C)',type:'number',step:'1',value:'78',placeholder:'°C'},
+    {id:'aiRpm',label:'RPM',type:'number',step:'1',value:'1420',placeholder:'RPM'},
+  ],
+  'Water injection pump': [
+    {id:'aiHrs',label:'Operating Hours',type:'number',step:'1',value:'6500',placeholder:'Hours'},
+    {id:'aiSuction',label:'Suction Pressure (bar)',type:'number',step:'0.1',value:'3.8',placeholder:'bar'},
+    {id:'aiDischarge',label:'Discharge Pressure (bar)',type:'number',step:'0.1',value:'8.5',placeholder:'bar'},
+    {id:'aiVib',label:'Vibration (mm/s)',type:'number',step:'0.1',value:'6.8',placeholder:'mm/s'},
+    {id:'aiWaterQuality',label:'Water Quality',type:'text',value:'Low sand, slightly saline',placeholder:'e.g. Low sand, slightly saline'},
+    {id:'aiFlow',label:'Flow Rate (m³/d)',type:'number',step:'1',value:'180',placeholder:'m³/d'},
+  ]
+};
+
+function createAIField({id,label,type,step,value,placeholder}){
+  return `<div class="fg"><label class="form-lbl" for="${id}">${label}</label><input class="fi-i" id="${id}" name="${id}" type="${type}" step="${step}" value="${value}" placeholder="${placeholder}"></div>`;
+}
+
+function renderAIFields(type){
+  const container=document.getElementById('aiFields');
+  const fields=AI_FIELD_SETS[type]||AI_FIELD_SETS['ESP pump (centrifugal, multi-stage)'];
+  container.innerHTML=fields.map(createAIField).join('');
+}
+
+function gatherAIInput(){
+  const type=document.getElementById('eqType').value;
+  const fields=AI_FIELD_SETS[type]||AI_FIELD_SETS['ESP pump (centrifugal, multi-stage)'];
+  const payload={eqType:type,aiNotes:document.getElementById('aiNotes').value.trim()||'Standard operating conditions.'};
+  fields.forEach(field=>{
+    const el=document.getElementById(field.id);
+    if(el){payload[field.id]=el.value.trim();}
+  });
+  return payload;
+}
+
 async function runAI(){
   const btn=document.getElementById('runBtn'),body=document.getElementById('respBody');
-const eq=document.getElementById('eqType').value;
-  const hrs=parseInt(document.getElementById('aiHrs').value,10)||4380;
-  const temp=document.getElementById('aiTemp').value;
-  const vib=parseFloat(document.getElementById('aiVib').value)||0;
-  const press=document.getElementById('aiPress').value;
-  const notes=document.getElementById('aiNotes').value.trim()||'Standard ESP operating conditions.';
+  const payload=gatherAIInput();
   btn.disabled=true;btn.textContent='⏳ Analyzing...';
   body.innerHTML='<div style="color:var(--mt);font-family:var(--mn);font-size:12px">Sending request<span class="cur">▌</span></div>';
   try{
-    const res=await fetch('/api/analyze',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({eqType:eq,aiHrs:hrs,aiTemp:temp,aiVib:vib,aiPress:press,aiNotes:notes})});
+    const res=await fetch('/api/analyze',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
     if(!res.ok){const errText=await res.text();throw new Error(errText||'HTTP '+res.status);}
     const result=await res.json();
     if(result.error){throw new Error(result.error);}
@@ -555,6 +617,8 @@ const eq=document.getElementById('eqType').value;
   }
   btn.disabled=false;btn.textContent='⚡ Analyze';
 }
+
+renderAIFields(document.getElementById('eqType').value);
 
 // ══ LITERATURE ══
 const LIT=[

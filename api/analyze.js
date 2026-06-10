@@ -5,16 +5,37 @@ const groq = new Groq({
 });
 
 function normalizeAnalysisInput(data) {
+    const normalizeString = value => value === undefined || value === null ? '' : String(value).trim();
     return {
-        type: (data.type || data.eqType || 'ESP pump').trim(),
-        manufacturer: (data.manufacturer || 'ESP equipment').trim(),
-        model: (data.model || 'Field X ESP').trim(),
+        type: normalizeString(data.type || data.eqType || 'ESP pump'),
+        manufacturer: normalizeString(data.manufacturer || 'ESP equipment'),
+        model: normalizeString(data.model || 'Field X ESP'),
         year: Number(data.year || data.aiYear || 2024) || 2024,
-        pressureTemp: (data.pressureTemp || data.aiPress || '35 atm').trim(),
+        pressureTemp: normalizeString(data.pressureTemp || data.aiPress || ''),
         hours: Number(data.hours || data.aiHrs || 4380) || 4380,
-        location: (data.location || 'Field X, Almaty').trim(),
-        lastRepair: data.lastRepair || data.aiLastRepair || new Date(Date.now() - 1000 * 60 * 60 * 24 * 90).toISOString().split('T')[0],
-        environment: (data.environment || data.aiNotes || data.notes || 'Standard ESP operating conditions.').trim()
+        motorTemp: normalizeString(data.motorTemp || data.aiTemp || ''),
+        vibration: normalizeString(data.vibration || data.aiVib || ''),
+        intakePressure: normalizeString(data.intakePressure || data.aiPress || ''),
+        flowRate: normalizeString(data.flowRate || data.aiFlow || ''),
+        sandContent: normalizeString(data.sandContent || data.aiSand || ''),
+        current: normalizeString(data.current || data.aiCurrent || ''),
+        voltage: normalizeString(data.voltage || data.aiVoltage || ''),
+        insulation: normalizeString(data.insulation || data.aiInsulation || ''),
+        sealTemp: normalizeString(data.sealTemp || data.aiSealTemp || ''),
+        lubricantLevel: normalizeString(data.lubricantLevel || data.aiLubricant || ''),
+        pressureDifferential: normalizeString(data.pressureDifferential || data.aiDiffPress || ''),
+        leak: normalizeString(data.leak || data.aiLeak || ''),
+        gasTemp: normalizeString(data.gasTemp || data.aiGasTemp || ''),
+        gasOilRatio: normalizeString(data.gasOilRatio || data.aiGOR || ''),
+        liquidCarryover: normalizeString(data.liquidCarryover || data.aiLCO || ''),
+        suctionPressure: normalizeString(data.suctionPressure || data.aiSuction || ''),
+        dischargePressure: normalizeString(data.dischargePressure || data.aiDischarge || ''),
+        oilTemp: normalizeString(data.oilTemp || data.aiOilTemp || ''),
+        rpm: normalizeString(data.rpm || data.aiRpm || ''),
+        waterQuality: normalizeString(data.waterQuality || data.aiWaterQuality || ''),
+        location: normalizeString(data.location || 'Field X, Almaty'),
+        lastRepair: normalizeString(data.lastRepair || data.aiLastRepair || new Date(Date.now() - 1000 * 60 * 60 * 24 * 90).toISOString().split('T')[0]),
+        environment: normalizeString(data.environment || data.aiNotes || data.notes || 'Standard ESP operating conditions.')
     };
 }
 
@@ -24,14 +45,14 @@ function validateInputData(data) {
 
     // Check equipment type
     const type = (data.type || '').trim();
-    const validTypes = ['pump', 'compressor', 'motor', 'engine', 'valve', 'turbine', 'generator', 'fan', 'blower', 'heat exchanger', 'boiler', 'насос', 'компрессор', 'двигатель', 'клапан', 'турбина', 'генератор', 'вентилятор', 'нагреватель', 'котел'];
+    const validTypes = ['pump', 'compressor', 'motor', 'engine', 'valve', 'turbine', 'generator', 'fan', 'blower', 'separator', 'seal', 'protector', 'injection', 'heat exchanger', 'boiler', 'насос', 'компрессор', 'двигатель', 'клапан', 'турбина', 'генератор', 'вентилятор', 'нагреватель', 'котел'];
     const isValidType = validTypes.some(validType => type.toLowerCase().includes(validType));
 
     if (!type) {
         issues.push('Equipment type is required');
     } else if (type.length < 3) {
         issues.push('Equipment type seems too short');
-    } else if (!isValidType && !/^[a-zA-Zа-яА-Я\s-]+$/.test(type)) {
+    } else if (!isValidType && !/^[a-zA-Zа-яА-Я\d\s()\[\]\-_,./%]+$/.test(type)) {
         issues.push('Equipment type contains invalid characters');
     } else if (!isValidType) {
         issues.push('Equipment type not recognized - please use standard equipment names (pump, compressor, motor, valve, etc.)');
@@ -122,11 +143,31 @@ EQUIPMENT DETAILS:
 - Manufacturer: ${data.manufacturer}
 - Model: ${data.model}
 - Year: ${data.year}
-- Operating Conditions: ${data.pressureTemp}
+- Operating Conditions: ${data.pressureTemp || 'N/A'}
 - Operating Hours: ${data.hours}
+- Motor Temperature: ${data.motorTemp || 'N/A'}
+- Vibration: ${data.vibration || 'N/A'}
+- Intake Pressure: ${data.intakePressure || 'N/A'}
+- Flow Rate: ${data.flowRate || 'N/A'}
+- Sand Content: ${data.sandContent || 'N/A'}
+- Current: ${data.current || 'N/A'}
+- Voltage: ${data.voltage || 'N/A'}
+- Insulation Resistance: ${data.insulation || 'N/A'}
+- Seal Temperature: ${data.sealTemp || 'N/A'}
+- Lubricant Level: ${data.lubricantLevel || 'N/A'}
+- Pressure Differential: ${data.pressureDifferential || 'N/A'}
+- Leak Indication: ${data.leak || 'N/A'}
+- Gas Temperature: ${data.gasTemp || 'N/A'}
+- Gas/Oil Ratio: ${data.gasOilRatio || 'N/A'}
+- Liquid Carryover: ${data.liquidCarryover || 'N/A'}
+- Suction Pressure: ${data.suctionPressure || 'N/A'}
+- Discharge Pressure: ${data.dischargePressure || 'N/A'}
+- Oil Temperature: ${data.oilTemp || 'N/A'}
+- RPM: ${data.rpm || 'N/A'}
+- Water Quality: ${data.waterQuality || 'N/A'}
 - Location: ${data.location}
 - Last Repair: ${data.lastRepair}
-- Environment: ${data.environment}
+- Notes: ${data.environment}
 
 Based on industry standards and historical data for similar equipment, provide analysis in this EXACT JSON format:
 
